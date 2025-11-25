@@ -1,5 +1,5 @@
 
-import { Lead, LeadStatus, Project, ProjectStatus, Invoice, UserRole, User, MarketingCampaign, Meeting } from '../types';
+import { Lead, LeadStatus, Project, ProjectStatus, Invoice, UserRole, User, MarketingCampaign, Meeting, JobApplication, ApplicationStatus } from '../types';
 
 // Helper to get dates relative to today
 const getDate = (diffDays: number) => {
@@ -14,6 +14,7 @@ export const MOCK_USERS: User[] = [
   { id: '3', name: 'Sneha (BDA)', email: 'sneha@vswdata.in', role: UserRole.BDA, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha', commissionRate: 8, phoneNumber: '9876543212' },
   { id: '4', name: 'Rohan (Client)', email: 'contact@cityhospital.in', role: UserRole.CLIENT, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan', phoneNumber: '9876543213' },
   { id: '5', name: 'Priya (HR Manager)', email: 'hr@vswdata.in', role: UserRole.HR_MANAGER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya', phoneNumber: '9876543214' },
+  { id: '6', name: 'Amit (Dev)', email: 'dev@vswdata.in', role: UserRole.DEVELOPER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit', phoneNumber: '9876543215' },
 ];
 
 export const MOCK_LEADS: Lead[] = [
@@ -92,6 +93,12 @@ export const MOCK_CAMPAIGNS: MarketingCampaign[] = [
   { id: '1', name: 'Hospital HMS Promo', platform: 'Instagram', status: 'Active', budget: 50000, leadsGenerated: 145 },
   { id: '2', name: 'Restaurant B2B Outreach', platform: 'LinkedIn', status: 'Active', budget: 120000, leadsGenerated: 42 },
   { id: '3', name: 'Logistics Cold Email', platform: 'Email', status: 'Paused', budget: 15000, leadsGenerated: 12 },
+];
+
+export const MOCK_APPLICATIONS: JobApplication[] = [
+  { id: 'a1', applicantName: 'Ravi Verma', email: 'ravi@gmail.com', role: 'Business Development Associate', appliedDate: getDate(-2), status: ApplicationStatus.NEW, phone: '9898989898', resumeUrl: '#' },
+  { id: 'a2', applicantName: 'Sita Sharma', email: 'sita@yahoo.com', role: 'Business Development Associate', appliedDate: getDate(-5), status: ApplicationStatus.SCREENING, phone: '9797979797', resumeUrl: '#' },
+  { id: 'a3', applicantName: 'Manoj Kumar', email: 'manoj@outlook.com', role: 'Frontend Developer', appliedDate: getDate(-10), status: ApplicationStatus.INTERVIEW, phone: '9696969696', resumeUrl: '#' },
 ];
 
 export const DASHBOARD_STATS = [

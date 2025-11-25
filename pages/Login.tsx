@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { UserRole, User } from '../types';
 import { MOCK_USERS } from '../services/mockData';
-import { Smartphone, ArrowRight, ShieldCheck, User as UserIcon, Mail, Phone, Loader2 } from 'lucide-react';
+import { Smartphone, ArrowRight, ShieldCheck, User as UserIcon, Mail, Phone, Loader2, Code, Briefcase, Users, Lock, HeartHandshake } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -92,9 +92,49 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }, 1000);
   };
 
+  const getRoleIcon = (role: UserRole) => {
+    switch (role) {
+      case UserRole.ADMIN: return <ShieldCheck size={14} className="text-blue-600" />;
+      case UserRole.HR_MANAGER: return <Users size={14} className="text-pink-600" />;
+      case UserRole.BDA: return <Briefcase size={14} className="text-green-600" />;
+      case UserRole.DEVELOPER: return <Code size={14} className="text-purple-600" />;
+      case UserRole.CLIENT: return <HeartHandshake size={14} className="text-orange-600" />;
+      case UserRole.PROJECT_MANAGER: return <Lock size={14} className="text-indigo-600" />;
+      default: return <UserIcon size={14} />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-100 max-w-md w-full text-center">
+      {/* QUICK LOGIN ACCESS - MOVED TOP */}
+      <div className="mb-6 w-full max-w-md animate-in fade-in slide-in-from-top-4 duration-500">
+         <div className="bg-white/80 backdrop-blur-md rounded-xl border border-slate-200 p-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 text-center">Quick Login (Developer Mode)</h3>
+            <div className="grid grid-cols-2 gap-2">
+               {MOCK_USERS.map((user) => (
+                  <button 
+                     key={user.id}
+                     onClick={() => {
+                        setPhoneNumber(user.phoneNumber || '');
+                        setStep('PHONE');
+                        setError('');
+                     }}
+                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100 transition-all text-left group"
+                  >
+                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        {getRoleIcon(user.role)}
+                     </div>
+                     <div className="overflow-hidden">
+                        <div className="text-xs font-bold text-slate-700 truncate">{user.role}</div>
+                        <div className="text-[10px] text-slate-400 font-mono truncate">{user.name}</div>
+                     </div>
+                  </button>
+               ))}
+            </div>
+         </div>
+      </div>
+
+      <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-100 max-w-md w-full text-center relative z-10">
         <div className="mb-6">
            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-brand-900 mb-2">
             AgencyOS
@@ -141,9 +181,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </>
               )}
             </button>
-            <div className="text-xs text-center text-slate-400 mt-4">
-              Try with <span className="font-mono bg-slate-100 px-1 rounded">9876543212</span> for Demo BDA
-            </div>
           </form>
         )}
 

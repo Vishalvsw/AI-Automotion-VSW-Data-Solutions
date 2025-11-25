@@ -117,3 +117,23 @@ export interface OnboardingFlow {
   generatedProposalUrl?: string;
   invoiceId?: string;
 }
+
+export enum ApplicationStatus {
+  NEW = 'New',
+  SCREENING = 'Screening',
+  INTERVIEW = 'Interview',
+  OFFER = 'Offer',
+  HIRED = 'Hired',
+  REJECTED = 'Rejected'
+}
+
+export interface JobApplication {
+  id: string;
+  applicantName: string;
+  email: string;
+  role: string;
+  appliedDate: string;
+  status: ApplicationStatus;
+  phone: string;
+  resumeUrl: string;
+}

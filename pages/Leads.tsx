@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
-import { MOCK_LEADS } from '../services/mockData';
-import { LeadStatus, Lead } from '../types';
-import { Search, Filter, Plus, Phone, Mail, MapPin, MessageSquare, FileText, CheckCircle, Calendar, AlertCircle, LayoutGrid, List, MoreHorizontal, Sparkles } from 'lucide-react';
+import { MOCK_LEADS, MOCK_USERS } from '../services/mockData';
+import { LeadStatus, Lead, UserRole } from '../types';
+import { Search, Filter, Plus, Phone, Mail, MapPin, MessageSquare, FileText, CheckCircle, Calendar, AlertCircle, LayoutGrid, List, MoreHorizontal, Sparkles, X, User as UserIcon, Tag, DollarSign } from 'lucide-react';
 
 const Leads: React.FC = () => {
+  const [leads, setLeads] = useState<Lead[]>(MOCK_LEADS);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const [filterOverdue, setFilterOverdue] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const getStatusColor = (status: LeadStatus) => {
     switch (status) {
@@ -37,8 +39,31 @@ const Leads: React.FC = () => {
   };
 
   const filteredLeads = filterOverdue 
-    ? MOCK_LEADS.filter(l => isOverdue(l.nextFollowUp)) 
-    : MOCK_LEADS;
+    ? leads.filter(l => isOverdue(l.nextFollowUp)) 
+    : leads;
+
+  const handleAddLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    const newLead: Lead = {
+      id: `lead-${Date.now()}`,
+      name: formData.get('name') as string,
+      company: formData.get('company') as string,
+      email: formData.get('email') as string,
+      value: Number(formData.get('value')),
+      status: formData.get('status') as LeadStatus,
+      lastContact: new Date().toISOString().split('T')[0],
+      nextFollowUp: formData.get('nextFollowUp') as string,
+      assignedTo: formData.get('assignedTo') as string,
+      score: 10, // Default starting score
+      tags: (formData.get('tags') as string).split(',').map(t => t.trim()).filter(t => t),
+      source: 'Manual Entry'
+    };
+
+    setLeads([newLead, ...leads]);
+    setIsAddModalOpen(false);
+  };
 
   const ActivityButton = ({ icon: Icon, label, onClick }: { icon: any, label: string, onClick: () => void }) => (
     <button 
@@ -72,7 +97,10 @@ const Leads: React.FC = () => {
                 <LayoutGrid size={18} />
               </button>
            </div>
-           <button className="flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white bg-brand-600 rounded-xl hover:bg-brand-700 transition-all shadow-sm shadow-brand-200">
+           <button 
+             onClick={() => setIsAddModalOpen(true)}
+             className="flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white bg-brand-600 rounded-xl hover:bg-brand-700 transition-all shadow-sm shadow-brand-200"
+           >
             <Plus size={18} className="mr-2" />
             Add Lead
           </button>
@@ -213,6 +241,94 @@ const Leads: React.FC = () => {
                  </div>
               )
            })}
+        </div>
+      )}
+
+      {/* CREATE LEAD MODAL */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                 <h2 className="text-lg font-bold text-slate-900">Add New Lead</h2>
+                 <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                    <X size={20} />
+                 </button>
+              </div>
+              <form onSubmit={handleAddLead} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                       <label className="text-xs font-bold text-slate-500 uppercase">Lead Name</label>
+                       <div className="relative">
+                          <UserIcon size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                          <input required name="name" type="text" placeholder="John Doe" className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                       </div>
+                    </div>
+                    <div className="space-y-1">
+                       <label className="text-xs font-bold text-slate-500 uppercase">Company</label>
+                       <div className="relative">
+                          <input required name="company" type="text" placeholder="Acme Corp" className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase">Email Address</label>
+                    <div className="relative">
+                       <Mail size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                       <input required name="email" type="email" placeholder="john@example.com" className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                       <label className="text-xs font-bold text-slate-500 uppercase">Deal Value (₹)</label>
+                       <div className="relative">
+                          <DollarSign size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                          <input required name="value" type="number" placeholder="500000" className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                       </div>
+                    </div>
+                    <div className="space-y-1">
+                       <label className="text-xs font-bold text-slate-500 uppercase">Status</label>
+                       <select name="status" className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                          {Object.values(LeadStatus).map(status => (
+                             <option key={status} value={status}>{status}</option>
+                          ))}
+                       </select>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Next Follow-up</label>
+                        <div className="relative">
+                           <Calendar size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                           <input name="nextFollowUp" type="date" className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                        </div>
+                     </div>
+                     <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Assigned To</label>
+                        <select name="assignedTo" className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                           {MOCK_USERS.filter(u => u.role === UserRole.BDA || u.role === UserRole.ADMIN).map(user => (
+                              <option key={user.id} value={user.name.split(' ')[0]}>{user.name}</option>
+                           ))}
+                        </select>
+                     </div>
+                 </div>
+
+                 <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase">Tags</label>
+                    <div className="relative">
+                       <Tag size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                       <input name="tags" type="text" placeholder="Cold, HMS, Urgent (comma separated)" className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                    </div>
+                 </div>
+
+                 <div className="pt-4 flex justify-end gap-3">
+                    <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-200 rounded-lg transition-all">Cancel</button>
+                    <button type="submit" className="px-6 py-2 text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm shadow-brand-200 transition-all">Create Lead</button>
+                 </div>
+              </form>
+           </div>
         </div>
       )}
 
