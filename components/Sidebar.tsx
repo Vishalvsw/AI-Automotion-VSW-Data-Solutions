@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { LayoutDashboard, Users, Briefcase, IndianRupee, FileText, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Briefcase, IndianRupee, Settings, LogOut, Megaphone, HeartHandshake, ShieldCheck, Rocket, PieChart } from 'lucide-react';
 import { UserRole } from '../types';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -19,54 +20,59 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
       { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     ];
 
-    if (role === UserRole.ADMIN || role === UserRole.BDA) {
-      links.push({ icon: Users, label: 'Leads (CRM)', path: '/leads' });
+    if (role === UserRole.ADMIN || role === UserRole.BDA || role === UserRole.HR_MANAGER) {
+      links.push({ icon: Users, label: 'Acquisition (CRM)', path: '/leads' });
+      links.push({ icon: Rocket, label: 'Onboarding', path: '/onboarding' });
+      links.push({ icon: Megaphone, label: 'Marketing', path: '/marketing' });
     }
 
     if (role !== UserRole.CLIENT) {
       links.push({ icon: Briefcase, label: 'Projects', path: '/projects' });
     } else {
-      // Client view
       links.push({ icon: Briefcase, label: 'My Projects', path: '/projects' });
     }
 
-    if (role === UserRole.ADMIN || role === UserRole.PROJECT_MANAGER || role === UserRole.CLIENT) {
-      links.push({ icon: IndianRupee, label: 'Finance', path: '/finance' });
+    if (role === UserRole.ADMIN || role === UserRole.PROJECT_MANAGER) {
+      links.push({ icon: HeartHandshake, label: 'Retention', path: '/retention' });
     }
 
-    if (role === UserRole.BDA || role === UserRole.ADMIN) {
-       links.push({ icon: FileText, label: 'Reports', path: '/reports' });
+    if (role === UserRole.ADMIN || role === UserRole.PROJECT_MANAGER || role === UserRole.CLIENT || role === UserRole.HR_MANAGER) {
+      links.push({ icon: IndianRupee, label: 'Finance', path: '/finance' });
     }
 
     return links;
   };
 
   const linkClasses = (active: boolean) => `
-    flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200
+    flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group
     ${active 
-      ? 'bg-brand-50 text-brand-700' 
-      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md shadow-brand-200' 
+      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
     }
   `;
 
   return (
     <aside 
       className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:inset-0
       `}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-center h-16 px-6 border-b border-slate-200">
-          <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-brand-900">
-            AgencyOS
-          </span>
+        <div className="flex items-center h-20 px-8 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">
+              VSW
+            </div>
+            <span className="text-xl font-bold text-slate-900 tracking-tight">
+              AgencyOS
+            </span>
+          </div>
         </div>
 
-        <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          <div className="mb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            Menu
+        <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+          <div className="mb-3 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Main Menu
           </div>
           {getLinks().map((link) => (
             <Link 
@@ -74,30 +80,35 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
               to={link.path} 
               className={linkClasses(isActive(link.path))}
             >
-              <link.icon size={20} />
+              <link.icon size={20} className={isActive(link.path) ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'} />
               {link.label}
             </Link>
           ))}
 
-          <div className="mt-8 mb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            System
+          <div className="mt-8 mb-3 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Administration
           </div>
+          {(role === UserRole.ADMIN || role === UserRole.HR_MANAGER) && (
+             <Link to="/settings" className={linkClasses(isActive('/settings/admin'))}>
+              <ShieldCheck size={20} className={isActive('/settings/admin') ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'} />
+              Admin Panel
+            </Link>
+          )}
           <Link to="/settings" className={linkClasses(isActive('/settings'))}>
-            <Settings size={20} />
-            Settings
+            <Settings size={20} className={isActive('/settings') ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'} />
+            System Settings
           </Link>
         </div>
 
-        <div className="p-4 border-t border-slate-200">
+        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <button 
             onClick={onLogout}
-            className="flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-medium text-red-600 transition-colors rounded-lg hover:bg-red-50"
+            className="flex items-center w-full gap-3 px-4 py-3 text-sm font-medium text-slate-600 transition-colors rounded-xl hover:bg-white hover:shadow-sm hover:text-red-600 border border-transparent hover:border-slate-200"
           >
             <LogOut size={18} />
             Sign Out
           </button>
         </div>
-      </div>
     </aside>
   );
 };

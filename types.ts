@@ -1,9 +1,11 @@
+
 export enum UserRole {
   ADMIN = 'ADMIN',
   PROJECT_MANAGER = 'PROJECT_MANAGER',
   BDA = 'BDA',
   DEVELOPER = 'DEVELOPER',
-  CLIENT = 'CLIENT'
+  CLIENT = 'CLIENT',
+  HR_MANAGER = 'HR_MANAGER'
 }
 
 export interface User {
@@ -12,6 +14,8 @@ export interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  commissionRate?: number; // e.g., 8 for 8%
+  phoneNumber?: string;
 }
 
 export enum LeadStatus {
@@ -23,6 +27,15 @@ export enum LeadStatus {
   CLOSED_LOST = 'Closed Lost'
 }
 
+export enum ActivityType {
+  COLD_CALL = 'Cold Call',
+  COLD_MESSAGE = 'Cold Message',
+  EMAIL = 'Email',
+  VISIT = 'Business Visit',
+  QUOTATION = 'Quotation Sent',
+  REQUIREMENTS = 'Requirements Gathering'
+}
+
 export interface Lead {
   id: string;
   name: string;
@@ -31,14 +44,20 @@ export interface Lead {
   value: number;
   status: LeadStatus;
   lastContact: string;
+  nextFollowUp?: string;
   assignedTo: string;
+  activities?: { type: ActivityType; date: string; note: string }[];
+  score?: number;
+  tags?: string[];
+  source?: string;
 }
 
 export enum ProjectStatus {
-  PLANNING = 'Planning',
-  IN_PROGRESS = 'In Progress',
-  REVIEW = 'Review',
-  COMPLETED = 'Completed'
+  REQUIREMENTS = 'Requirements',
+  PRODUCTION = 'Production',
+  DELIVERY = 'Delivery',
+  COMPLETED = 'Completed',
+  RETAINER = 'Retainer/Support'
 }
 
 export interface Task {
@@ -65,4 +84,36 @@ export interface Invoice {
   amount: number;
   date: string;
   status: 'Paid' | 'Pending' | 'Overdue';
+}
+
+export interface MarketingCampaign {
+  id: string;
+  name: string;
+  platform: 'Facebook' | 'LinkedIn' | 'Email' | 'Instagram';
+  status: 'Active' | 'Paused' | 'Draft';
+  budget: number;
+  leadsGenerated: number;
+}
+
+export interface Meeting {
+  id: string;
+  leadId: string;
+  leadName: string;
+  date: string;
+  time: string;
+  type: 'Demo' | 'Discovery' | 'Closing';
+  status: 'Scheduled' | 'Completed' | 'Cancelled';
+}
+
+export interface OnboardingStep {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+export interface OnboardingFlow {
+  leadId: string;
+  steps: OnboardingStep[];
+  generatedProposalUrl?: string;
+  invoiceId?: string;
 }

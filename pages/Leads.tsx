@@ -1,20 +1,23 @@
+
 import React, { useState } from 'react';
 import { MOCK_LEADS } from '../services/mockData';
-import { LeadStatus } from '../types';
-import { Search, Filter, Plus, MoreHorizontal, Phone, Mail } from 'lucide-react';
+import { LeadStatus, Lead } from '../types';
+import { Search, Filter, Plus, Phone, Mail, MapPin, MessageSquare, FileText, CheckCircle, Calendar, AlertCircle, LayoutGrid, List, MoreHorizontal, Sparkles } from 'lucide-react';
 
 const Leads: React.FC = () => {
-  const [filter, setFilter] = useState('All');
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+  const [filterOverdue, setFilterOverdue] = useState(false);
 
   const getStatusColor = (status: LeadStatus) => {
     switch (status) {
-      case LeadStatus.NEW: return 'bg-blue-50 text-blue-700';
-      case LeadStatus.CONTACTED: return 'bg-yellow-50 text-yellow-700';
-      case LeadStatus.MEETING_SCHEDULED: return 'bg-purple-50 text-purple-700';
-      case LeadStatus.PROPOSAL_SENT: return 'bg-indigo-50 text-indigo-700';
-      case LeadStatus.CLOSED_WON: return 'bg-green-50 text-green-700';
-      case LeadStatus.CLOSED_LOST: return 'bg-red-50 text-red-700';
-      default: return 'bg-gray-50 text-gray-700';
+      case LeadStatus.NEW: return 'bg-blue-100 text-blue-700 border-blue-200';
+      case LeadStatus.CONTACTED: return 'bg-amber-100 text-amber-700 border-amber-200';
+      case LeadStatus.MEETING_SCHEDULED: return 'bg-purple-100 text-purple-700 border-purple-200';
+      case LeadStatus.PROPOSAL_SENT: return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case LeadStatus.CLOSED_WON: return 'bg-green-100 text-green-700 border-green-200';
+      case LeadStatus.CLOSED_LOST: return 'bg-red-50 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -26,96 +29,275 @@ const Leads: React.FC = () => {
     }).format(amount);
   };
 
+  const isOverdue = (dateString?: string) => {
+    if (!dateString) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(dateString) < today;
+  };
+
+  const filteredLeads = filterOverdue 
+    ? MOCK_LEADS.filter(l => isOverdue(l.nextFollowUp)) 
+    : MOCK_LEADS;
+
+  const ActivityButton = ({ icon: Icon, label, onClick }: { icon: any, label: string, onClick: () => void }) => (
+    <button 
+      onClick={onClick}
+      className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 transition-all gap-2 group"
+    >
+      <Icon size={20} className="text-slate-400 group-hover:text-brand-600" />
+      <span className="text-xs font-medium">{label}</span>
+    </button>
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between sm:flex-row sm:items-center gap-4">
+    <div className="space-y-6 relative h-full flex flex-col">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Leads & CRM</h1>
-          <p className="text-slate-500">Manage your pipeline and sales activities.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Acquisition & Sales</h1>
+          <p className="text-slate-500">Manage your pipeline from lead to closure.</p>
         </div>
-        <button className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors">
-          <Plus size={16} className="mr-2" />
-          Add New Lead
-        </button>
+        <div className="flex items-center gap-3">
+           <div className="flex bg-white border border-slate-200 rounded-lg p-1">
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                <List size={18} />
+              </button>
+              <button 
+                onClick={() => setViewMode('kanban')}
+                className={`p-2 rounded-md transition-colors ${viewMode === 'kanban' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                <LayoutGrid size={18} />
+              </button>
+           </div>
+           <button className="flex items-center justify-center px-4 py-2.5 text-sm font-bold text-white bg-brand-600 rounded-xl hover:bg-brand-700 transition-all shadow-sm shadow-brand-200">
+            <Plus size={18} className="mr-2" />
+            Add Lead
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between gap-4">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search leads by name or company..." 
-              className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              placeholder="Search leads by name, company or tag..." 
+              className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
             />
           </div>
           <div className="flex gap-2">
+             <button 
+               onClick={() => setFilterOverdue(!filterOverdue)}
+               className={`flex items-center px-3 py-2 text-sm font-medium border rounded-lg transition-colors ${filterOverdue ? 'bg-red-50 text-red-700 border-red-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+             >
+              <AlertCircle size={16} className="mr-2" />
+              Overdue
+            </button>
              <button className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">
               <Filter size={16} className="mr-2" />
               Filter
             </button>
           </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-slate-600">
-            <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-3 font-semibold">Name</th>
-                <th className="px-6 py-3 font-semibold">Company</th>
-                <th className="px-6 py-3 font-semibold">Value</th>
-                <th className="px-6 py-3 font-semibold">Status</th>
-                <th className="px-6 py-3 font-semibold">Last Contact</th>
-                <th className="px-6 py-3 font-semibold">Assignee</th>
-                <th className="px-6 py-3 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_LEADS.map((lead) => (
-                <tr key={lead.id} className="bg-white border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-900">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold text-xs">
-                        {lead.name.charAt(0)}
-                      </div>
-                      {lead.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">{lead.company}</td>
-                  <td className="px-6 py-4 text-slate-900 font-medium">{formatINR(lead.value)}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>
-                      {lead.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">{new Date(lead.lastContact).toLocaleDateString()}</td>
-                  <td className="px-6 py-4">{lead.assignedTo}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="p-1 text-slate-400 hover:text-brand-600 transition-colors">
-                        <Mail size={16} />
-                      </button>
-                      <button className="p-1 text-slate-400 hover:text-green-600 transition-colors">
-                        <Phone size={16} />
-                      </button>
-                      <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                        <MoreHorizontal size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="p-4 border-t border-slate-200 flex items-center justify-between text-sm text-slate-500">
-           <span>Showing 5 of 24 leads</span>
-           <div className="flex gap-2">
-             <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
-             <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50">Next</button>
-           </div>
-        </div>
       </div>
+
+      {viewMode === 'list' ? (
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex-1">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-slate-600">
+              <thead className="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4 font-semibold">Lead Details</th>
+                  <th className="px-6 py-4 font-semibold">Value & Score</th>
+                  <th className="px-6 py-4 font-semibold">Status</th>
+                  <th className="px-6 py-4 font-semibold">Contact Info</th>
+                  <th className="px-6 py-4 font-semibold">Next Action</th>
+                  <th className="px-6 py-4 font-semibold text-right"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredLeads.map((lead) => {
+                  const overdue = isOverdue(lead.nextFollowUp);
+                  return (
+                    <tr key={lead.id} className="bg-white hover:bg-slate-50/80 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-brand-100 to-brand-50 rounded-full flex items-center justify-center text-brand-700 font-bold text-sm border border-brand-100">
+                            {lead.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-slate-900">{lead.name}</div>
+                            <div className="text-xs text-slate-500">{lead.company}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-900">{formatINR(lead.value)}</div>
+                        <div className="flex items-center gap-1 mt-1">
+                           <div className="flex-1 h-1.5 bg-slate-100 rounded-full w-16">
+                              <div className={`h-1.5 rounded-full ${lead.score && lead.score > 70 ? 'bg-green-500' : 'bg-yellow-500'}`} style={{width: `${lead.score}%`}}></div>
+                           </div>
+                           <span className="text-xs text-slate-400">{lead.score}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusColor(lead.status)}`}>
+                          {lead.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-xs">
+                         <div className="flex flex-col gap-1">
+                           <a href={`mailto:${lead.email}`} className="flex items-center gap-2 text-slate-600 hover:text-brand-600 transition-colors">
+                              <Mail size={14} /> {lead.email}
+                           </a>
+                           {/* Using static phone for now as it's not on Lead type yet, but implying functionality */}
+                           <span className="flex items-center gap-2 text-slate-500">
+                              <Phone size={14} /> +91 98765 XXXXX
+                           </span>
+                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {lead.nextFollowUp ? (
+                          <div className={`flex items-center gap-2 text-xs font-medium px-2 py-1 rounded-lg w-fit ${overdue ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-slate-600'}`}>
+                            {overdue ? <AlertCircle size={14} /> : <Calendar size={14} />}
+                            {new Date(lead.nextFollowUp).toLocaleDateString()}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-xs italic">Not set</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => setSelectedLead(lead)}
+                          className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                        >
+                          <MoreHorizontal size={20} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        /* KANBAN VIEW */
+        <div className="flex overflow-x-auto gap-4 pb-4 h-full">
+           {[LeadStatus.NEW, LeadStatus.CONTACTED, LeadStatus.MEETING_SCHEDULED, LeadStatus.PROPOSAL_SENT, LeadStatus.CLOSED_WON].map((status) => {
+              const leadsInStatus = filteredLeads.filter(l => l.status === status);
+              return (
+                 <div key={status} className="min-w-[280px] bg-slate-50 rounded-xl border border-slate-200 flex flex-col h-full">
+                    <div className="p-3 border-b border-slate-200 font-bold text-sm text-slate-700 flex justify-between items-center sticky top-0 bg-slate-50 rounded-t-xl z-10">
+                       {status}
+                       <span className="bg-white px-2 py-0.5 rounded text-xs border border-slate-200">{leadsInStatus.length}</span>
+                    </div>
+                    <div className="p-3 space-y-3 overflow-y-auto flex-1 custom-scrollbar">
+                       {leadsInStatus.map(lead => (
+                          <div key={lead.id} onClick={() => setSelectedLead(lead)} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer transition-all hover:border-brand-300 group">
+                             <div className="flex justify-between items-start mb-2">
+                                <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{lead.source}</span>
+                                {isOverdue(lead.nextFollowUp) && <AlertCircle size={16} className="text-red-500" />}
+                             </div>
+                             <h4 className="font-bold text-slate-900 text-sm mb-0.5">{lead.name}</h4>
+                             <p className="text-xs text-slate-500 mb-3">{lead.company}</p>
+                             <div className="flex justify-between items-center text-xs">
+                                <span className="font-semibold text-brand-600">{formatINR(lead.value)}</span>
+                                <div className={`w-2 h-2 rounded-full ${lead.score && lead.score > 70 ? 'bg-green-500' : 'bg-amber-400'}`}></div>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+              )
+           })}
+        </div>
+      )}
+
+      {/* Activity Log Modal */}
+      {selectedLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-0 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+              <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-brand-700 font-bold text-xl">
+                    {selectedLead.name.charAt(0)}
+                 </div>
+                 <div>
+                    <h2 className="text-xl font-bold text-slate-900">{selectedLead.name}</h2>
+                    <p className="text-sm text-slate-500 flex items-center gap-2">
+                       {selectedLead.company} • <span className={`w-2 h-2 rounded-full ${selectedLead.score && selectedLead.score > 70 ? 'bg-green-500' : 'bg-yellow-500'}`}></span> {selectedLead.score} Score
+                    </p>
+                 </div>
+              </div>
+              <button onClick={() => setSelectedLead(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                <span className="text-2xl leading-none">&times;</span>
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-8">
+                <ActivityButton icon={Phone} label="Cold Call" onClick={() => console.log('Call logged')} />
+                <ActivityButton icon={MessageSquare} label="WhatsApp" onClick={() => console.log('Msg logged')} />
+                <ActivityButton icon={Mail} label="Email" onClick={() => console.log('Email logged')} />
+                <ActivityButton icon={Sparkles} label="AI Draft" onClick={() => console.log('AI Draft')} />
+                <ActivityButton icon={MapPin} label="Visit" onClick={() => console.log('Visit logged')} />
+                <ActivityButton icon={FileText} label="Proposal" onClick={() => console.log('Quote logged')} />
+                <ActivityButton icon={Calendar} label="Book Meeting" onClick={() => console.log('Book meeting')} />
+                <ActivityButton icon={CheckCircle} label="Onboard" onClick={() => console.log('Onboard logged')} />
+              </div>
+
+              <div className="space-y-5">
+                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Next Follow-up</label>
+                    <div className="flex gap-4">
+                       <div className="relative flex-1">
+                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+                          <input 
+                            type="date" 
+                            defaultValue={selectedLead.nextFollowUp}
+                            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none bg-white" 
+                          />
+                       </div>
+                       <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                          +2 Days
+                       </button>
+                       <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                          +1 Week
+                       </button>
+                    </div>
+                 </div>
+
+                 <div>
+                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Interaction Notes</label>
+                   <textarea 
+                     className="w-full p-4 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none resize-none shadow-sm"
+                     rows={4}
+                     placeholder="Enter call summary, client objections, or requirements gathered..."
+                   ></textarea>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+              <button 
+                onClick={() => setSelectedLead(null)}
+                className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => setSelectedLead(null)}
+                className="px-5 py-2.5 text-sm font-bold bg-brand-600 text-white rounded-xl hover:bg-brand-700 shadow-md shadow-brand-200 transition-all"
+              >
+                Save Log
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

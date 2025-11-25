@@ -6,6 +6,9 @@ import Leads from './pages/Leads';
 import Projects from './pages/Projects';
 import Finance from './pages/Finance';
 import Login from './pages/Login';
+import Marketing from './pages/Marketing';
+import Retention from './pages/Retention';
+import Settings from './pages/Settings';
 import { User, UserRole } from './types';
 import { Menu, Bell, Search } from 'lucide-react';
 
@@ -81,6 +84,9 @@ const App: React.FC = () => {
                 <Route path="/leads" element={user.role === UserRole.ADMIN || user.role === UserRole.BDA ? <Leads /> : <Navigate to="/" />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/finance" element={user.role !== UserRole.BDA && user.role !== UserRole.DEVELOPER ? <Finance /> : <Navigate to="/" />} />
+                <Route path="/marketing" element={<Marketing />} />
+                <Route path="/retention" element={<Retention />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </div>
