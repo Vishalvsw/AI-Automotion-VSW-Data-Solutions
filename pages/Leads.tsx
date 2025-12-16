@@ -1,15 +1,39 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MOCK_LEADS, MOCK_USERS } from '../services/mockData';
-import { LeadStatus, Lead, UserRole } from '../types';
-import { Search, Filter, Plus, Phone, Mail, MapPin, MessageSquare, FileText, CheckCircle, Calendar, AlertCircle, LayoutGrid, List, MoreHorizontal, Sparkles, X, User as UserIcon, Tag, DollarSign } from 'lucide-react';
+import { LeadStatus, Lead, UserRole, ActivityType, User } from '../types';
+import { Search, Filter, Plus, Phone, Mail, MapPin, MessageSquare, FileText, CheckCircle, Calendar, AlertCircle, LayoutGrid, List, MoreHorizontal, Sparkles, X, User as UserIcon, Tag, DollarSign, Clock, Users } from 'lucide-react';
 
-const Leads: React.FC = () => {
-  const [leads, setLeads] = useState<Lead[]>(MOCK_LEADS);
+interface LeadsProps {
+  user: User;
+}
+
+const Leads: React.FC<LeadsProps> = ({ user }) => {
+  // If user is BDA, filter initial leads. Else show all.
+  const getInitialLeads = () => {
+    if (user.role === UserRole.BDA) {
+       return MOCK_LEADS.filter(l => 
+          l.assignedTo.toLowerCase().includes(user.name.split(' ')[0].toLowerCase()) ||
+          l.assignedTo === user.name
+       );
+    }
+    return MOCK_LEADS;
+  };
+
+  const [leads, setLeads] = useState<Lead[]>(getInitialLeads());
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Re-filter if user prop changes (though usually component remounts)
+  useEffect(() => {
+    setLeads(getInitialLeads());
+  }, [user]);
+
+  // Activity Log State
+  const [activityNote, setActivityNote] = useState('');
+  const [activityType, setActivityType] = useState<ActivityType>(ActivityType.COLD_CALL);
+  const [nextFollowUpDate, setNextFollowUpDate] = useState('');
 
   const getStatusColor = (status: LeadStatus) => {
     switch (status) {
@@ -46,6 +70,9 @@ const Leads: React.FC = () => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     
+    // Auto-assign to self if BDA
+    const assignedToVal = user.role === UserRole.BDA ? user.name.split(' ')[0] : (formData.get('assignedTo') as string);
+
     const newLead: Lead = {
       id: `lead-${Date.now()}`,
       name: formData.get('name') as string,
@@ -55,22 +82,61 @@ const Leads: React.FC = () => {
       status: formData.get('status') as LeadStatus,
       lastContact: new Date().toISOString().split('T')[0],
       nextFollowUp: formData.get('nextFollowUp') as string,
-      assignedTo: formData.get('assignedTo') as string,
+      assignedTo: assignedToVal,
       score: 10, // Default starting score
       tags: (formData.get('tags') as string).split(',').map(t => t.trim()).filter(t => t),
-      source: 'Manual Entry'
+      source: 'Manual Entry',
+      activities: []
     };
 
     setLeads([newLead, ...leads]);
     setIsAddModalOpen(false);
   };
 
-  const ActivityButton = ({ icon: Icon, label, onClick }: { icon: any, label: string, onClick: () => void }) => (
+  const handleOpenActivityModal = (lead: Lead) => {
+      setSelectedLead(lead);
+      setNextFollowUpDate(lead.nextFollowUp || '');
+      setActivityNote('');
+      setActivityType(ActivityType.COLD_CALL);
+  };
+
+  const handleDateQuickAction = (days: number) => {
+      const date = new Date();
+      date.setDate(date.getDate() + days);
+      setNextFollowUpDate(date.toISOString().split('T')[0]);
+  };
+
+  const handleSaveActivity = () => {
+      if (!selectedLead) return;
+
+      const newActivity = {
+          type: activityType,
+          date: new Date().toISOString().split('T')[0],
+          note: activityNote || 'No notes added.'
+      };
+
+      const updatedLeads = leads.map(l => {
+          if (l.id === selectedLead.id) {
+              return {
+                  ...l,
+                  lastContact: new Date().toISOString().split('T')[0],
+                  nextFollowUp: nextFollowUpDate,
+                  activities: [...(l.activities || []), newActivity]
+              };
+          }
+          return l;
+      });
+
+      setLeads(updatedLeads);
+      setSelectedLead(null);
+  };
+
+  const ActivityButton = ({ icon: Icon, label, type, onClick }: { icon: any, label: string, type?: ActivityType, onClick: () => void }) => (
     <button 
       onClick={onClick}
-      className="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 transition-all gap-2 group"
+      className={`flex flex-col items-center justify-center p-4 border rounded-xl transition-all gap-2 group ${activityType === type ? 'bg-brand-50 border-brand-500 text-brand-700 ring-1 ring-brand-500' : 'border-slate-200 hover:bg-slate-50 hover:border-brand-200 hover:text-brand-600'}`}
     >
-      <Icon size={20} className="text-slate-400 group-hover:text-brand-600" />
+      <Icon size={20} className={activityType === type ? 'text-brand-600' : 'text-slate-400 group-hover:text-brand-600'} />
       <span className="text-xs font-medium">{label}</span>
     </button>
   );
@@ -79,8 +145,12 @@ const Leads: React.FC = () => {
     <div className="space-y-6 relative h-full flex flex-col">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Acquisition & Sales</h1>
-          <p className="text-slate-500">Manage your pipeline from lead to closure.</p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {user.role === UserRole.BDA ? 'My Leads' : 'Acquisition & Sales'}
+          </h1>
+          <p className="text-slate-500">
+             {user.role === UserRole.BDA ? 'Manage your assigned pipeline.' : 'Manage company pipeline.'}
+          </p>
         </div>
         <div className="flex items-center gap-3">
            <div className="flex bg-white border border-slate-200 rounded-lg p-1">
@@ -131,7 +201,18 @@ const Leads: React.FC = () => {
           </div>
       </div>
 
-      {viewMode === 'list' ? (
+      {filteredLeads.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center bg-white border border-slate-200 border-dashed rounded-xl p-10 text-center">
+             <div className="bg-slate-50 p-4 rounded-full mb-4"><Users size={32} className="text-slate-400" /></div>
+             <h3 className="text-lg font-bold text-slate-900">No leads found</h3>
+             <p className="text-slate-500 max-w-sm mx-auto mb-6">
+                 {filterOverdue ? 'Good job! No overdue leads.' : 'Your pipeline is empty. Start by adding a new lead.'}
+             </p>
+             <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 bg-slate-900 text-white font-bold rounded-lg text-sm">Create Lead</button>
+          </div>
+      ) : (
+        <>
+        {viewMode === 'list' ? (
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex-1">
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-slate-600">
@@ -142,6 +223,7 @@ const Leads: React.FC = () => {
                   <th className="px-6 py-4 font-semibold">Status</th>
                   <th className="px-6 py-4 font-semibold">Contact Info</th>
                   <th className="px-6 py-4 font-semibold">Next Action</th>
+                  {user.role !== UserRole.BDA && <th className="px-6 py-4 font-semibold">Assigned To</th>}
                   <th className="px-6 py-4 font-semibold text-right"></th>
                 </tr>
               </thead>
@@ -196,9 +278,14 @@ const Leads: React.FC = () => {
                           <span className="text-slate-400 text-xs italic">Not set</span>
                         )}
                       </td>
+                      {user.role !== UserRole.BDA && (
+                        <td className="px-6 py-4 text-xs font-medium text-slate-500">
+                           {lead.assignedTo}
+                        </td>
+                      )}
                       <td className="px-6 py-4 text-right">
                         <button 
-                          onClick={() => setSelectedLead(lead)}
+                          onClick={() => handleOpenActivityModal(lead)}
                           className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                         >
                           <MoreHorizontal size={20} />
@@ -224,7 +311,7 @@ const Leads: React.FC = () => {
                     </div>
                     <div className="p-3 space-y-3 overflow-y-auto flex-1 custom-scrollbar">
                        {leadsInStatus.map(lead => (
-                          <div key={lead.id} onClick={() => setSelectedLead(lead)} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer transition-all hover:border-brand-300 group">
+                          <div key={lead.id} onClick={() => handleOpenActivityModal(lead)} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer transition-all hover:border-brand-300 group">
                              <div className="flex justify-between items-start mb-2">
                                 <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{lead.source}</span>
                                 {isOverdue(lead.nextFollowUp) && <AlertCircle size={16} className="text-red-500" />}
@@ -235,6 +322,11 @@ const Leads: React.FC = () => {
                                 <span className="font-semibold text-brand-600">{formatINR(lead.value)}</span>
                                 <div className={`w-2 h-2 rounded-full ${lead.score && lead.score > 70 ? 'bg-green-500' : 'bg-amber-400'}`}></div>
                              </div>
+                             {user.role !== UserRole.BDA && (
+                                <div className="mt-2 text-[10px] text-slate-400 flex items-center gap-1 border-t border-slate-50 pt-2">
+                                   <UserIcon size={10} /> {lead.assignedTo}
+                                </div>
+                             )}
                           </div>
                        ))}
                     </div>
@@ -242,6 +334,8 @@ const Leads: React.FC = () => {
               )
            })}
         </div>
+      )}
+      </>
       )}
 
       {/* CREATE LEAD MODAL */}
@@ -305,14 +399,17 @@ const Leads: React.FC = () => {
                            <input name="nextFollowUp" type="date" className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
                         </div>
                      </div>
-                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Assigned To</label>
-                        <select name="assignedTo" className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white">
-                           {MOCK_USERS.filter(u => u.role === UserRole.BDA || u.role === UserRole.ADMIN).map(user => (
-                              <option key={user.id} value={user.name.split(' ')[0]}>{user.name}</option>
-                           ))}
-                        </select>
-                     </div>
+                     {/* Only show Assign To if user is NOT BDA */}
+                     {user.role !== UserRole.BDA && (
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Assigned To</label>
+                            <select name="assignedTo" className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                            {MOCK_USERS.filter(u => u.role === UserRole.BDA || u.role === UserRole.ADMIN).map(u => (
+                                <option key={u.id} value={u.name.split(' ')[0]}>{u.name}</option>
+                            ))}
+                            </select>
+                        </div>
+                     )}
                  </div>
 
                  <div className="space-y-1">
@@ -344,7 +441,7 @@ const Leads: React.FC = () => {
                  <div>
                     <h2 className="text-xl font-bold text-slate-900">{selectedLead.name}</h2>
                     <p className="text-sm text-slate-500 flex items-center gap-2">
-                       {selectedLead.company} • <span className={`w-2 h-2 rounded-full ${selectedLead.score && selectedLead.score > 70 ? 'bg-green-500' : 'bg-yellow-500'}`}></span> {selectedLead.score} Score
+                       {selectedLead.company} • <span className={`w-2 h-2 rounded-full ${selectedLead.score && selectedLead.score > 70 ? 'bg-green-50' : 'bg-yellow-500'}`}></span> {selectedLead.score} Score
                     </p>
                  </div>
               </div>
@@ -355,14 +452,14 @@ const Leads: React.FC = () => {
 
             <div className="p-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-8">
-                <ActivityButton icon={Phone} label="Cold Call" onClick={() => console.log('Call logged')} />
-                <ActivityButton icon={MessageSquare} label="WhatsApp" onClick={() => console.log('Msg logged')} />
-                <ActivityButton icon={Mail} label="Email" onClick={() => console.log('Email logged')} />
-                <ActivityButton icon={Sparkles} label="AI Draft" onClick={() => console.log('AI Draft')} />
-                <ActivityButton icon={MapPin} label="Visit" onClick={() => console.log('Visit logged')} />
-                <ActivityButton icon={FileText} label="Proposal" onClick={() => console.log('Quote logged')} />
-                <ActivityButton icon={Calendar} label="Book Meeting" onClick={() => console.log('Book meeting')} />
-                <ActivityButton icon={CheckCircle} label="Onboard" onClick={() => console.log('Onboard logged')} />
+                <ActivityButton type={ActivityType.COLD_CALL} icon={Phone} label="Cold Call" onClick={() => setActivityType(ActivityType.COLD_CALL)} />
+                <ActivityButton type={ActivityType.COLD_MESSAGE} icon={MessageSquare} label="WhatsApp" onClick={() => setActivityType(ActivityType.COLD_MESSAGE)} />
+                <ActivityButton type={ActivityType.EMAIL} icon={Mail} label="Email" onClick={() => setActivityType(ActivityType.EMAIL)} />
+                <ActivityButton type={ActivityType.REQUIREMENTS} icon={Sparkles} label="AI Draft" onClick={() => setActivityType(ActivityType.REQUIREMENTS)} />
+                <ActivityButton type={ActivityType.VISIT} icon={MapPin} label="Visit" onClick={() => setActivityType(ActivityType.VISIT)} />
+                <ActivityButton type={ActivityType.QUOTATION} icon={FileText} label="Proposal" onClick={() => setActivityType(ActivityType.QUOTATION)} />
+                <ActivityButton type={ActivityType.COLD_CALL} icon={Calendar} label="Book Meeting" onClick={() => console.log('Book meeting')} />
+                <ActivityButton type={ActivityType.COLD_CALL} icon={CheckCircle} label="Onboard" onClick={() => console.log('Onboard logged')} />
               </div>
 
               <div className="space-y-5">
@@ -373,14 +470,15 @@ const Leads: React.FC = () => {
                           <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
                           <input 
                             type="date" 
-                            defaultValue={selectedLead.nextFollowUp}
+                            value={nextFollowUpDate}
+                            onChange={(e) => setNextFollowUpDate(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none bg-white" 
                           />
                        </div>
-                       <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                       <button onClick={() => handleDateQuickAction(2)} className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
                           +2 Days
                        </button>
-                       <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                       <button onClick={() => handleDateQuickAction(7)} className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
                           +1 Week
                        </button>
                     </div>
@@ -391,9 +489,28 @@ const Leads: React.FC = () => {
                    <textarea 
                      className="w-full p-4 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none resize-none shadow-sm"
                      rows={4}
-                     placeholder="Enter call summary, client objections, or requirements gathered..."
+                     value={activityNote}
+                     onChange={(e) => setActivityNote(e.target.value)}
+                     placeholder={`Enter ${activityType} notes, client objections, or requirements gathered...`}
                    ></textarea>
                 </div>
+
+                {selectedLead.activities && selectedLead.activities.length > 0 && (
+                   <div className="pt-4 border-t border-slate-100">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Recent Activity</label>
+                      <div className="space-y-3">
+                         {selectedLead.activities.slice().reverse().map((act, i) => (
+                             <div key={i} className="flex gap-3 text-sm">
+                                <div className="mt-0.5 text-slate-400"><Clock size={14} /></div>
+                                <div>
+                                   <div className="font-semibold text-slate-700">{act.type} <span className="text-slate-400 font-normal">• {act.date}</span></div>
+                                   <div className="text-slate-600">{act.note}</div>
+                                </div>
+                             </div>
+                         ))}
+                      </div>
+                   </div>
+                )}
               </div>
             </div>
             
@@ -405,7 +522,7 @@ const Leads: React.FC = () => {
                 Cancel
               </button>
               <button 
-                onClick={() => setSelectedLead(null)}
+                onClick={handleSaveActivity}
                 className="px-5 py-2.5 text-sm font-bold bg-brand-600 text-white rounded-xl hover:bg-brand-700 shadow-md shadow-brand-200 transition-all"
               >
                 Save Log

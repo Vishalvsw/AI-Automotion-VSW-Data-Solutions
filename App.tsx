@@ -80,13 +80,26 @@ const App: React.FC = () => {
           <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
             <div className="max-w-7xl mx-auto">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/leads" element={user.role === UserRole.ADMIN || user.role === UserRole.BDA ? <Leads /> : <Navigate to="/" />} />
-                <Route path="/projects" element={<Projects />} />
+                {/* Pass user prop to pages that need data filtering */}
+                <Route path="/" element={<Dashboard user={user} />} />
+                
+                <Route path="/leads" element={user.role === UserRole.ADMIN || user.role === UserRole.BDA || user.role === UserRole.HR_MANAGER || user.role === UserRole.MARKETING_MANAGER ? <Leads user={user} /> : <Navigate to="/" />} />
+                
+                <Route path="/projects" element={<Projects user={user} />} />
+                
+                {/* Strict Access Control: BDA cannot see Finance */}
                 <Route path="/finance" element={user.role !== UserRole.BDA && user.role !== UserRole.DEVELOPER ? <Finance /> : <Navigate to="/" />} />
+                
                 <Route path="/marketing" element={<Marketing />} />
-                <Route path="/retention" element={<Retention />} />
+                
+                {/* Strict Access Control: BDA cannot see Retention */}
+                <Route path="/retention" element={user.role !== UserRole.BDA ? <Retention /> : <Navigate to="/" />} />
+                
                 <Route path="/settings" element={<Settings />} />
+                
+                {/* BDA Onboarding access */}
+                <Route path="/onboarding" element={user.role === UserRole.BDA || user.role === UserRole.ADMIN ? <Leads user={user} /> : <Navigate to="/" />} />
+                
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </div>

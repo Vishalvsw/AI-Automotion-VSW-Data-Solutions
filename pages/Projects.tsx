@@ -1,21 +1,30 @@
 
 import React, { useState } from 'react';
 import { MOCK_PROJECTS } from '../services/mockData';
-import { ProjectStatus, Project, Task } from '../types';
-import { MoreVertical, Calendar, X, User, CheckSquare, FileText, Send, Code, AlertTriangle, Clock } from 'lucide-react';
+import { ProjectStatus, Project, Task, User } from '../types';
+import { MoreVertical, Calendar, X, User as UserIcon, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Plus } from 'lucide-react';
 
-const Projects: React.FC = () => {
+interface ProjectsProps {
+  user: User;
+}
+
+const Projects: React.FC<ProjectsProps> = ({ user }) => {
+  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState<Task['priority']>('Medium');
 
   const columns = [
     { id: ProjectStatus.REQUIREMENTS, title: 'Requirements', color: 'bg-purple-50 text-purple-700', icon: FileText },
     { id: ProjectStatus.PRODUCTION, title: 'Production', color: 'bg-blue-50 text-blue-700', icon: Code },
     { id: ProjectStatus.DELIVERY, title: 'Delivery', color: 'bg-indigo-50 text-indigo-700', icon: Send },
     { id: ProjectStatus.COMPLETED, title: 'Completed', color: 'bg-green-50 text-green-700', icon: CheckSquare },
+    { id: ProjectStatus.RETAINER, title: 'Retainer', color: 'bg-orange-50 text-orange-700', icon: Clock },
   ];
 
   const getProjectsByStatus = (status: ProjectStatus) => {
-    return MOCK_PROJECTS.filter(p => p.status === status);
+    return projects.filter(p => p.status === status);
   };
 
   const formatINR = (amount: number) => {
@@ -32,11 +41,73 @@ const Projects: React.FC = () => {
 
   const getPriorityColor = (priority: Task['priority']) => {
     switch(priority) {
-        case 'High': return 'text-red-700 bg-red-50 border-red-100';
-        case 'Medium': return 'text-orange-700 bg-orange-50 border-orange-100';
-        case 'Low': return 'text-green-700 bg-green-50 border-green-100';
+        case 'High': return 'text-red-700 bg-red-50 border-red-100 ring-red-200';
+        case 'Medium': return 'text-orange-700 bg-orange-50 border-orange-100 ring-orange-200';
+        case 'Low': return 'text-green-700 bg-green-50 border-green-100 ring-green-200';
         default: return 'text-slate-600 bg-slate-50 border-slate-100';
     }
+  };
+
+  const handleAddProject = (e: React.FormEvent) => {
+      e.preventDefault();
+      const formData = new FormData(e.target as HTMLFormElement);
+      
+      const newProject: Project = {
+          id: `proj-${Date.now()}`,
+          title: formData.get('title') as string,
+          client: formData.get('client') as string,
+          status: formData.get('status') as ProjectStatus,
+          dueDate: formData.get('dueDate') as string,
+          budget: Number(formData.get('budget')),
+          progress: 0,
+          tasks: []
+      };
+
+      setProjects([newProject, ...projects]);
+      setIsAddProjectModalOpen(false);
+  };
+
+  const handleAddTask = () => {
+      if (!selectedProject || !newTaskTitle.trim()) return;
+
+      const newTask: Task = {
+          id: `t-${Date.now()}`,
+          title: newTaskTitle,
+          assignee: 'Unassigned',
+          priority: newTaskPriority
+      };
+
+      const updatedProject = {
+          ...selectedProject,
+          tasks: [...selectedProject.tasks, newTask]
+      };
+
+      setProjects(projects.map(p => p.id === selectedProject.id ? updatedProject : p));
+      setSelectedProject(updatedProject);
+      setNewTaskTitle('');
+      setNewTaskPriority('Medium'); // Reset to default
+  };
+
+  const handleToggleTask = (taskId: string) => {
+      if (!selectedProject) return;
+      // Simulate deleting/completing task
+      const updatedTasks = selectedProject.tasks.filter(t => t.id !== taskId);
+      const updatedProject = { ...selectedProject, tasks: updatedTasks };
+      
+      setProjects(projects.map(p => p.id === selectedProject.id ? updatedProject : p));
+      setSelectedProject(updatedProject);
+  };
+
+  const handlePriorityChange = (taskId: string, newPriority: Task['priority']) => {
+      if (!selectedProject) return;
+      
+      const updatedTasks = selectedProject.tasks.map(t => 
+        t.id === taskId ? { ...t, priority: newPriority } : t
+      );
+      const updatedProject = { ...selectedProject, tasks: updatedTasks };
+      
+      setProjects(projects.map(p => p.id === selectedProject.id ? updatedProject : p));
+      setSelectedProject(updatedProject);
   };
 
   return (
@@ -48,7 +119,7 @@ const Projects: React.FC = () => {
         </div>
         <div className="flex gap-2">
             <button className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50">Filter</button>
-            <button className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800">New Project</button>
+            <button onClick={() => setIsAddProjectModalOpen(true)} className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800">New Project</button>
         </div>
       </div>
 
@@ -68,7 +139,7 @@ const Projects: React.FC = () => {
               
               <div className="flex-1 p-3 overflow-y-auto space-y-3 custom-scrollbar">
                 {getProjectsByStatus(col.id).map((project) => {
-                  const overdue = isOverdue(project.dueDate) && project.status !== ProjectStatus.COMPLETED;
+                  const overdue = isOverdue(project.dueDate) && project.status !== ProjectStatus.COMPLETED && project.status !== ProjectStatus.RETAINER;
                   return (
                     <div 
                         key={project.id} 
@@ -111,7 +182,7 @@ const Projects: React.FC = () => {
                             <div className="flex -space-x-2">
                                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${project.id}`} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100" alt="" />
                                 <div className="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[8px] font-bold text-slate-500">
-                                    +2
+                                    +
                                 </div>
                             </div>
                         </div>
@@ -123,6 +194,50 @@ const Projects: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Add Project Modal */}
+      {isAddProjectModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <h2 className="text-lg font-bold text-slate-900">Start New Project</h2>
+                    <button onClick={() => setIsAddProjectModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                </div>
+                <form onSubmit={handleAddProject} className="p-6 space-y-4">
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Project Title</label>
+                        <input required name="title" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="e.g. E-Commerce App" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Client</label>
+                            <input required name="client" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="Client Name" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Budget (₹)</label>
+                            <input required name="budget" type="number" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="500000" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Due Date</label>
+                            <input required name="dueDate" type="date" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Initial Status</label>
+                            <select name="status" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                                {Object.values(ProjectStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                    <div className="pt-4 flex justify-end gap-2">
+                        <button type="button" onClick={() => setIsAddProjectModalOpen(false)} className="px-4 py-2 text-slate-600 font-medium text-sm hover:bg-slate-50 rounded-lg">Cancel</button>
+                        <button type="submit" className="px-4 py-2 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800">Create Project</button>
+                    </div>
+                </form>
+            </div>
+          </div>
+      )}
 
       {/* Project Details Modal */}
       {selectedProject && (
@@ -149,8 +264,8 @@ const Projects: React.FC = () => {
                         </div>
                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Deadline</div>
-                            <div className={`font-semibold text-sm ${isOverdue(selectedProject.dueDate) ? 'text-red-600' : 'text-slate-900'}`}>
-                                {new Date(selectedProject.dueDate).toLocaleDateString()}
+                            <div className={`font-semibold text-sm ${isOverdue(selectedProject.dueDate) && selectedProject.status !== ProjectStatus.RETAINER ? 'text-red-600' : 'text-slate-900'}`}>
+                                {selectedProject.dueDate ? new Date(selectedProject.dueDate).toLocaleDateString() : 'N/A'}
                             </div>
                         </div>
                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -169,23 +284,31 @@ const Projects: React.FC = () => {
                             Tasks & Milestones
                         </h3>
                         
-                        <div className="space-y-3">
+                        <div className="space-y-3 mb-4">
                             {selectedProject.tasks.length > 0 ? (
                                 selectedProject.tasks.map((task) => (
                                     <div key={task.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors group">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-5 h-5 rounded border-2 border-slate-300 group-hover:border-brand-400 cursor-pointer"></div>
+                                            <div onClick={() => handleToggleTask(task.id)} className="w-5 h-5 rounded border-2 border-slate-300 group-hover:border-brand-400 cursor-pointer flex items-center justify-center text-transparent hover:text-brand-400">
+                                                <div className="w-2.5 h-2.5 bg-current rounded-sm opacity-0 group-hover:opacity-100"></div>
+                                            </div>
                                             <div>
                                                 <div className="font-medium text-slate-900 text-sm">{task.title}</div>
                                                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                                                    <User size={12} />
+                                                    <UserIcon size={12} />
                                                     {task.assignee}
                                                 </div>
                                             </div>
                                         </div>
-                                        <span className={`px-2.5 py-1 text-xs font-bold rounded-md border ${getPriorityColor(task.priority)}`}>
-                                            {task.priority}
-                                        </span>
+                                        <select 
+                                            value={task.priority}
+                                            onChange={(e) => handlePriorityChange(task.id, e.target.value as any)}
+                                            className={`text-[10px] font-bold uppercase tracking-wider rounded-md border py-1 px-2 outline-none cursor-pointer hover:bg-white transition-all ${getPriorityColor(task.priority)}`}
+                                        >
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                        </select>
                                     </div>
                                 ))
                             ) : (
@@ -194,12 +317,32 @@ const Projects: React.FC = () => {
                                 </div>
                             )}
                         </div>
+
+                        {/* Add Task Input */}
+                        <div className="flex gap-2">
+                             <div className="flex-1 relative">
+                                <input 
+                                    value={newTaskTitle}
+                                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                                    placeholder="New task title..."
+                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none pr-24"
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
+                                />
+                                <div className="absolute right-1 top-1 bottom-1">
+                                    <select 
+                                        value={newTaskPriority}
+                                        onChange={(e) => setNewTaskPriority(e.target.value as any)}
+                                        className="h-full text-xs bg-slate-50 border-none rounded-md text-slate-600 font-medium focus:ring-0 cursor-pointer hover:bg-slate-100"
+                                    >
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                             </div>
+                             <button onClick={handleAddTask} className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800">Add</button>
+                        </div>
                     </div>
-                    
-                    <button className="w-full py-3 border border-dashed border-slate-300 rounded-xl text-slate-500 text-sm font-medium hover:bg-slate-50 hover:border-slate-400 transition-all flex items-center justify-center gap-2 group">
-                        <span className="bg-slate-200 text-slate-600 rounded-full w-5 h-5 flex items-center justify-center text-xs group-hover:bg-slate-300 transition-colors">+</span> 
-                        Add New Task
-                    </button>
                 </div>
             </div>
         </div>

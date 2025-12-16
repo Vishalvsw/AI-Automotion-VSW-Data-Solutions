@@ -1,27 +1,53 @@
 
 import React, { useState } from 'react';
 import { MOCK_USERS } from '../services/mockData';
-import { UserRole } from '../types';
-import { Shield, User as UserIcon, CheckSquare, Bell, Lock, UserPlus } from 'lucide-react';
+import { UserRole, User } from '../types';
+import { Shield, User as UserIcon, CheckSquare, Bell, Lock, UserPlus, CheckCircle, XCircle, X, Trash2 } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('users');
+  const [users, setUsers] = useState<User[]>(MOCK_USERS);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   
-  // In a real app, this comes from context/auth. 
-  // We'll simulate checking the current user from localStorage or just assume role based on MOCK_USERS usage elsewhere
-  // For UI logic here, let's assume we are viewing as the logged in user.
-  // Note: Since this is a view component, we'll check permission visually for the demo.
-  // We'll simulate that we are looking at this AS an HR Manager for demonstration if we want to show controls,
-  // or hide them if not. 
-  // IMPORTANT: To make this robust, passing `currentUser` prop to Settings would be better, but for now we'll 
-  // add a visual toggle or just show the restriction message if you aren't HR.
-  
-  // Let's assume for this specific view we need to know who is looking. 
-  // I will add a helper to simulate 'Am I HR?'. 
-  // For the purpose of the prototype, I'll allow viewing but disable buttons if not HR.
-  // We can grab the user from localStorage if we stored it in Login, but let's just add a disclaimer UI.
-  
-  const isHRManager = (userRole?: UserRole) => userRole === UserRole.HR_MANAGER;
+  // Mock Approvals Data
+  const [approvals, setApprovals] = useState([
+    { id: 1, type: 'Invoice Approval', desc: 'Approve Invoice #INV-2024-002 for ₹12,50,000', requester: 'Karan (Finance)', status: 'Pending' },
+    { id: 2, type: 'New Hire', desc: 'Approve Hiring of Sr. React Developer', requester: 'Priya (HR)', status: 'Pending' },
+    { id: 3, type: 'Project Budget', desc: 'Increase budget for Food Delivery App by 10%', requester: 'Rahul (PM)', status: 'Pending' },
+  ]);
+
+  const handleApprove = (id: number) => {
+    setApprovals(approvals.map(a => a.id === id ? { ...a, status: 'Approved' } : a));
+  };
+
+  const handleReject = (id: number) => {
+    setApprovals(approvals.map(a => a.id === id ? { ...a, status: 'Rejected' } : a));
+  };
+
+  const handleRoleChange = (userId: string, newRole: UserRole) => {
+      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+  };
+
+  const handleRemoveUser = (userId: string) => {
+      if (confirm('Are you sure you want to remove this user?')) {
+          setUsers(users.filter(u => u.id !== userId));
+      }
+  };
+
+  const handleInviteUser = (e: React.FormEvent) => {
+      e.preventDefault();
+      const formData = new FormData(e.target as HTMLFormElement);
+      const newUser: User = {
+          id: `u-${Date.now()}`,
+          name: formData.get('name') as string,
+          email: formData.get('email') as string,
+          role: formData.get('role') as UserRole,
+          phoneNumber: formData.get('phone') as string,
+          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.get('name')}`
+      };
+      setUsers([...users, newUser]);
+      setIsInviteModalOpen(false);
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -41,7 +67,12 @@ const Settings: React.FC = () => {
           onClick={() => setActiveTab('approvals')}
           className={`pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'approvals' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
         >
-          Pending Approvals
+          Approvals Workflow
+          {approvals.filter(a => a.status === 'Pending').length > 0 && (
+             <span className="ml-2 bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
+               {approvals.filter(a => a.status === 'Pending').length}
+             </span>
+          )}
         </button>
       </div>
 
@@ -52,8 +83,7 @@ const Settings: React.FC = () => {
              <div>
                <h4 className="font-semibold text-blue-900 text-sm">Role Management Restricted</h4>
                <p className="text-xs text-blue-700 mt-1">
-                 Only <strong>HR Managers</strong> can invite new users, remove members, or change role assignments. 
-                 All other users have read-only access to the team list.
+                 Only <strong>HR Managers</strong> and <strong>Founders</strong> can invite new users, remove members, or change role assignments. 
                </p>
              </div>
           </div>
@@ -61,14 +91,13 @@ const Settings: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
               <h3 className="font-semibold text-slate-700">Team Members</h3>
-              {/* Only show Invite button visually, usually disabled if not HR */}
-              <button className="flex items-center gap-2 px-3 py-1.5 bg-brand-600 text-white text-xs font-bold rounded hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <button onClick={() => setIsInviteModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 bg-brand-600 text-white text-xs font-bold rounded hover:bg-brand-700 transition-colors">
                 <UserPlus size={14} />
                 Invite User
               </button>
             </div>
             <div className="divide-y divide-slate-100">
-              {MOCK_USERS.map(user => (
+              {users.map(user => (
                 <div key={user.id} className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" />
@@ -84,22 +113,18 @@ const Settings: React.FC = () => {
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col items-end">
                        <span className="text-xs font-bold uppercase text-slate-500 mb-1">Role</span>
-                       {/* This select should be disabled for non-HR */}
                        <select 
                          className="text-sm border border-slate-200 rounded px-2 py-1 text-slate-600 bg-white focus:ring-2 focus:ring-brand-500 outline-none" 
-                         defaultValue={user.role}
+                         value={user.role}
+                         onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
                        >
-                        <option value="ADMIN">Admin</option>
-                        <option value="PROJECT_MANAGER">Manager</option>
-                        <option value="BDA">Sales (BDA)</option>
-                        <option value="DEVELOPER">Developer</option>
-                        <option value="CLIENT">Client</option>
-                        <option value="HR_MANAGER">HR Manager</option>
+                          {Object.values(UserRole).map(role => (
+                              <option key={role} value={role}>{role}</option>
+                          ))}
                       </select>
                     </div>
-                    {/* Remove button */}
-                    <button className="text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded">
-                      <Shield size={16} />
+                    <button onClick={() => handleRemoveUser(user.id)} className="text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded transition-colors">
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
@@ -110,15 +135,70 @@ const Settings: React.FC = () => {
       )}
 
       {activeTab === 'approvals' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-          <div className="p-6 text-center">
-             <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-               <CheckSquare size={24} />
-             </div>
-             <h3 className="text-lg font-medium text-slate-900">No Pending Approvals</h3>
-             <p className="text-slate-500">All invoices and project milestones have been processed.</p>
-          </div>
+        <div className="space-y-4">
+           {approvals.map(approval => (
+              <div key={approval.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                 <div className="flex items-start gap-4">
+                    <div className={`p-3 rounded-xl ${approval.status === 'Pending' ? 'bg-orange-100 text-orange-600' : approval.status === 'Approved' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                       {approval.status === 'Pending' ? <Bell size={24} /> : approval.status === 'Approved' ? <CheckCircle size={24} /> : <XCircle size={24} />}
+                    </div>
+                    <div>
+                       <h4 className="font-bold text-slate-900">{approval.type}</h4>
+                       <p className="text-sm text-slate-600 mb-1">{approval.desc}</p>
+                       <p className="text-xs text-slate-400">Requested by: {approval.requester}</p>
+                    </div>
+                 </div>
+                 {approval.status === 'Pending' ? (
+                   <div className="flex gap-2">
+                      <button onClick={() => handleReject(approval.id)} className="px-4 py-2 border border-slate-200 text-slate-600 font-bold text-sm rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200">Reject</button>
+                      <button onClick={() => handleApprove(approval.id)} className="px-4 py-2 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800 shadow-lg shadow-slate-200">Approve</button>
+                   </div>
+                 ) : (
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${approval.status === 'Approved' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                       {approval.status}
+                    </span>
+                 )}
+              </div>
+           ))}
         </div>
+      )}
+
+      {/* INVITE USER MODAL */}
+      {isInviteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <h2 className="text-lg font-bold text-slate-900">Invite Team Member</h2>
+                    <button onClick={() => setIsInviteModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                </div>
+                <form onSubmit={handleInviteUser} className="p-6 space-y-4">
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Full Name</label>
+                        <input required name="name" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="e.g. Sara Smith" />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
+                        <input required name="email" type="email" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="sara@vswdata.in" />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Phone</label>
+                        <input required name="phone" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="9876543210" />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Role</label>
+                        <select name="role" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                            {Object.values(UserRole).map(role => (
+                                <option key={role} value={role}>{role}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="pt-2 flex justify-end gap-2">
+                         <button type="button" onClick={() => setIsInviteModalOpen(false)} className="px-4 py-2 text-slate-600 font-medium text-sm hover:bg-slate-50 rounded-lg">Cancel</button>
+                         <button type="submit" className="px-4 py-2 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800">Send Invite</button>
+                    </div>
+                </form>
+            </div>
+          </div>
       )}
     </div>
   );

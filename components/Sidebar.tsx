@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LayoutDashboard, Users, Briefcase, IndianRupee, Settings, LogOut, Megaphone, HeartHandshake, ShieldCheck, Rocket, PieChart } from 'lucide-react';
 import { UserRole } from '../types';
@@ -20,24 +19,44 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
       { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     ];
 
-    if (role === UserRole.ADMIN || role === UserRole.BDA || role === UserRole.HR_MANAGER) {
+    const isExec = role === UserRole.CEO || role === UserRole.FOUNDER || role === UserRole.CTO;
+    const isSales = role === UserRole.BDA || role === UserRole.MARKETING_MANAGER;
+    const isFinance = role === UserRole.FINANCE_MANAGER;
+    const isAdmin = role === UserRole.ADMIN || role === UserRole.HR_MANAGER;
+
+    // Leads / CRM - Accessible to Sales, Execs, Admin
+    if (isExec || isSales || isAdmin) {
       links.push({ icon: Users, label: 'Acquisition (CRM)', path: '/leads' });
       links.push({ icon: Rocket, label: 'Onboarding', path: '/onboarding' });
+    }
+
+    // Marketing - Accessible to Marketing, Execs, Admin
+    // BDAs usually don't manage campaigns, just leads, but we'll leave it if they need to see sources
+    if (isExec || role === UserRole.MARKETING_MANAGER || role === UserRole.ADMIN) {
       links.push({ icon: Megaphone, label: 'Marketing', path: '/marketing' });
     }
 
-    if (role !== UserRole.CLIENT) {
+    // Projects - Accessible to everyone EXCEPT Finance and BDA (BDAs usually hand off after Onboarding)
+    // If you want BDA to track status, remove the check. But "not for others user" implies strictness.
+    if (role !== UserRole.CLIENT && role !== UserRole.FINANCE_MANAGER && role !== UserRole.BDA) {
       links.push({ icon: Briefcase, label: 'Projects', path: '/projects' });
-    } else {
+    } else if (role === UserRole.CLIENT) {
       links.push({ icon: Briefcase, label: 'My Projects', path: '/projects' });
     }
 
-    if (role === UserRole.ADMIN || role === UserRole.PROJECT_MANAGER) {
+    // Retention - Execs, PMs, Admins only
+    if (isExec || role === UserRole.PROJECT_MANAGER || role === UserRole.ADMIN) {
       links.push({ icon: HeartHandshake, label: 'Retention', path: '/retention' });
     }
 
-    if (role === UserRole.ADMIN || role === UserRole.PROJECT_MANAGER || role === UserRole.CLIENT || role === UserRole.HR_MANAGER) {
+    // Finance - Execs, Finance, Admin, Client
+    if (isExec || isFinance || role === UserRole.ADMIN || role === UserRole.CLIENT) {
       links.push({ icon: IndianRupee, label: 'Finance', path: '/finance' });
+    }
+
+    // Recruitment - Execs, HR, Admin
+    if (isExec || role === UserRole.HR_MANAGER || role === UserRole.ADMIN) {
+       links.push({ icon: Users, label: 'Recruitment', path: '/recruitment' });
     }
 
     return links;
@@ -88,16 +107,19 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
           <div className="mt-8 mb-3 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
             Administration
           </div>
-          {(role === UserRole.ADMIN || role === UserRole.HR_MANAGER) && (
+          {(role === UserRole.ADMIN || role === UserRole.HR_MANAGER || role === UserRole.CEO || role === UserRole.FOUNDER) && (
              <Link to="/settings" className={linkClasses(isActive('/settings/admin'))}>
               <ShieldCheck size={20} className={isActive('/settings/admin') ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'} />
               Admin Panel
             </Link>
           )}
-          <Link to="/settings" className={linkClasses(isActive('/settings'))}>
-            <Settings size={20} className={isActive('/settings') ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'} />
-            System Settings
-          </Link>
+          {/* BDA shouldn't see System Settings in a strict environment, usually just Profile */}
+          {role !== UserRole.BDA && (
+            <Link to="/settings" className={linkClasses(isActive('/settings'))}>
+              <Settings size={20} className={isActive('/settings') ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'} />
+              System Settings
+            </Link>
+          )}
         </div>
 
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">

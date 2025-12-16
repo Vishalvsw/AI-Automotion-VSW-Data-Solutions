@@ -18,75 +18,114 @@ export const MOCK_USERS: User[] = [
 ];
 
 export const MOCK_LEADS: Lead[] = [
-  { id: '1', name: 'Dr. Amit Patel', company: 'City Care Hospital (HMS)', email: 'amit@citycare.in', value: 450000, status: LeadStatus.NEW, lastContact: getDate(-2), nextFollowUp: getDate(-1), assignedTo: 'Sneha', score: 45, tags: ['Cold', 'HMS'], source: 'Google Maps' },
-  { id: '2', name: 'Anjali Gupta', company: 'Tasty Bites Delivery', email: 'anjali@tastybites.in', value: 1200000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 85, tags: ['Hot', 'Referral'], source: 'LinkedIn' },
-  { id: '3', name: 'Vikram Singh', company: 'SecureView CCTV', email: 'vikram@secureview.in', value: 850000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-5), nextFollowUp: getDate(-2), assignedTo: 'Sneha', score: 70, tags: ['Warm', 'CCTV'], source: 'Website' },
-  { id: '4', name: 'Neha Reddy', company: 'HealthPlus Clinic', email: 'neha@healthplus.in', value: 1500000, status: LeadStatus.CLOSED_WON, lastContact: getDate(-10), nextFollowUp: getDate(60), assignedTo: 'Sneha', score: 95, tags: ['Closed'], source: 'Referral' },
-  { id: '5', name: 'Arjun Mehta', company: 'EduLearn Systems', email: 'arjun@edulearn.in', value: 300000, status: LeadStatus.CONTACTED, lastContact: getDate(0), nextFollowUp: getDate(3), assignedTo: 'Sneha', score: 55, tags: ['Warm'], source: 'Facebook' },
-  { id: '6', name: 'Rajesh Kumar', company: 'Kumar Logistics', email: 'rajesh@kumarlogistics.in', value: 2200000, status: LeadStatus.NEW, lastContact: getDate(-1), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 30, tags: ['Cold'], source: 'Cold Call' },
+  { id: 'l1', name: 'Satish', company: 'CNC-Satish', email: 'satish@cnc.com', value: 16000, status: LeadStatus.NEW, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 20, tags: ['Cold'], source: 'Referral' },
+  { id: 'l2', name: 'Raj', company: 'CNC - Raj', email: 'raj@cnc.com', value: 16000, status: LeadStatus.NEW, lastContact: getDate(-2), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 20, tags: ['Cold'], source: 'Referral' },
+  { id: 'l3', name: 'Vishwa', company: 'CNC - Vishwa', email: 'vishwa@cnc.com', value: 16000, status: LeadStatus.NEW, lastContact: getDate(-3), nextFollowUp: getDate(3), assignedTo: 'Sneha', score: 20, tags: ['Cold'], source: 'Referral' },
+  { id: 'l4', name: 'SMS Client', company: 'SMS', email: 'contact@sms.com', value: 3000, status: LeadStatus.CONTACTED, lastContact: getDate(0), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 60, tags: ['Negotiation'], source: 'Inbound' },
+  { id: 'l5', name: 'Shiva', company: 'CCTV Shiva - Bharath Digital', email: 'shiva@bharathdigital.in', value: 158000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 75, tags: ['Quote Sent', 'Advance Pending'], source: 'Direct' },
+  { id: 'l6', name: 'Paper Website', company: 'Paper Submit Website', email: 'info@papersubmit.com', value: 40000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 50, tags: ['Meeting Fix'], source: 'Outbound' },
+  { id: 'l7', name: 'Briks Owner', company: 'Briks Website', email: 'owner@briks.com', value: 15000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-2), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 50, tags: ['Meeting Fix'], source: 'Outbound' },
+  { id: 'l8', name: 'Editor', company: 'News Paper Portal', email: 'editor@newsportal.com', value: 40000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: getDate(3), assignedTo: 'Sneha', score: 55, tags: ['Meeting Fix'], source: 'Outbound' },
+  { id: 'l9', name: 'Hospital Admin', company: 'HMS and Pharmacy MS', email: 'admin@hms.com', value: 40000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 60, tags: ['Meeting Fix', 'Healthcare'], source: 'Outbound' },
+  { id: 'l10', name: 'Tech Lead', company: 'Luminos precision technology', email: 'info@luminos.com', value: 16000, status: LeadStatus.NEW, lastContact: getDate(0), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 30, tags: ['Today'], source: 'Cold Call' },
+  { id: 'l11', name: 'Manager', company: 'Hotel, Bar Billing App', email: 'manager@hotelbar.com', value: 160000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 70, tags: ['Demo Ready'], source: 'Inbound' },
+  { id: 'l12', name: 'Shiva Sai', company: 'Medical Billing App', email: 'shiva@medical.com', value: 40000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 70, tags: ['Demo Ready'], source: 'Referral' },
+  { id: 'l13', name: 'Owner', company: 'DotPe Replace Client', email: 'owner@dotpe-replace.com', value: 40000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-2), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 60, tags: ['Meeting Fix'], source: 'Outbound' },
+  { id: 'l14', name: 'Analyst', company: 'CDR Analysis', email: 'analyst@cdr.com', value: 1500000, status: LeadStatus.CONTACTED, lastContact: getDate(-5), nextFollowUp: getDate(5), assignedTo: 'Sneha', score: 40, tags: ['Waiting'], source: 'Referral' },
+  { id: 'l15', name: 'Admin', company: 'Pragnya education & society', email: 'admin@pragnya.edu', value: 0, status: LeadStatus.NEW, lastContact: getDate(-3), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 10, tags: ['Need Call'], source: 'List' },
+  { id: 'l16', name: 'Akash', company: 'Akash BDR', email: 'akash@bdr.com', value: 0, status: LeadStatus.NEW, lastContact: getDate(-3), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 10, tags: ['Need Call'], source: 'List' },
+  { id: 'l17', name: 'Principal', company: 'Akash Pharmacy college', email: 'principal@akash.edu', value: 0, status: LeadStatus.NEW, lastContact: getDate(-3), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 10, tags: ['Need Call'], source: 'List' },
+  { id: 'l18', name: 'Owner', company: 'SHURAYWADA DHABA', email: 'contact@dhaba.com', value: 0, status: LeadStatus.NEW, lastContact: getDate(-3), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 10, tags: ['Need Call'], source: 'List' },
+  { id: 'l19', name: 'Coordinator', company: 'AMKA EduLlink', email: 'info@amka.com', value: 0, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: '2024-12-15', assignedTo: 'Sneha', score: 50, tags: ['Meeting 15 Dec'], source: 'Outbound' },
+  { id: 'l20', name: 'Umesh', company: 'UMESH - FIN STOCKS', email: 'umesh@finstocks.com', value: 0, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: '2024-12-15', assignedTo: 'Sneha', score: 50, tags: ['Meeting 15 Dec'], source: 'Outbound' },
+  { id: 'l21', name: 'Samrth', company: 'Jwellers website Samrth', email: 'samrth@jwellers.com', value: 0, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: '2024-12-14', assignedTo: 'Sneha', score: 50, tags: ['Meeting 14 Dec'], source: 'Outbound' },
+  { id: 'l22', name: 'Manager', company: 'NK finstock Website', email: 'manager@nkfinstock.com', value: 0, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: '2024-12-15', assignedTo: 'Sneha', score: 50, tags: ['Meeting 15 Dec'], source: 'Outbound' },
+  { id: 'l23', name: 'Shoba', company: 'Shoba services', email: 'shoba@services.com', value: 0, status: LeadStatus.NEW, lastContact: getDate(0), nextFollowUp: '2025-12-18', assignedTo: 'Sneha', score: 10, tags: ['Future'], source: 'Outbound' },
+  { id: 'l24', name: 'Client', company: 'Youtech solutions', email: 'contact@youtech.com', value: 0, status: LeadStatus.NEW, lastContact: getDate(0), nextFollowUp: '2025-12-17', assignedTo: 'Sneha', score: 10, tags: ['Future'], source: 'Outbound' },
+  { id: 'l25', name: 'Client', company: 'arryaemps', email: 'contact@arryaemps.com', value: 1000, status: LeadStatus.CLOSED_LOST, lastContact: getDate(-30), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 0, tags: ['Dropped'], source: 'Old' },
+
 ];
 
 export const MOCK_MEETINGS: Meeting[] = [
-  { id: 'm1', leadId: '2', leadName: 'Anjali Gupta', date: getDate(1), time: '14:00', type: 'Demo', status: 'Scheduled' },
-  { id: 'm2', leadId: '3', leadName: 'Vikram Singh', date: getDate(2), time: '11:00', type: 'Discovery', status: 'Scheduled' },
+  { id: 'm1', leadId: 'l11', leadName: 'Hotel, Bar App', date: getDate(2), time: '14:00', type: 'Demo', status: 'Scheduled' },
+  { id: 'm2', leadId: 'l6', leadName: 'Paper Website', date: getDate(1), time: '11:00', type: 'Discovery', status: 'Scheduled' },
 ];
 
 export const MOCK_PROJECTS: Project[] = [
   { 
-    id: '1', 
-    title: 'Hospital Management System', 
-    client: 'City Care Hospital', 
-    status: ProjectStatus.PRODUCTION, 
-    dueDate: getDate(15), 
-    progress: 65, 
-    budget: 1200000,
+    id: 'p1', 
+    title: 'School Management System', 
+    client: 'Iqbal Patel School', 
+    status: ProjectStatus.COMPLETED, 
+    dueDate: getDate(-20), 
+    progress: 100, 
+    budget: 15000,
     tasks: [
-      { id: 't1', title: 'Design Patient Portal', assignee: 'Dev', priority: 'High' },
-      { id: 't2', title: 'Setup Doctor Database', assignee: 'Dev', priority: 'High' },
-      { id: 't2b', title: 'Integrate Payment Gateway', assignee: 'Dev', priority: 'Medium' }
+      { id: 't1', title: 'Deployment', assignee: 'Dev', priority: 'High' }
     ]
   },
   { 
-    id: '2', 
-    title: 'Food Delivery App MVP', 
-    client: 'Tasty Bites', 
-    status: ProjectStatus.REQUIREMENTS, 
-    dueDate: getDate(30), 
-    progress: 10, 
-    budget: 2500000,
-    tasks: [
-      { id: 't3', title: 'Wireframing Order Flow', assignee: 'Designer', priority: 'Medium' }
-    ] 
-  },
-  { 
-    id: '3', 
-    title: 'SEO & Marketing Dashboard', 
-    client: 'SecureView CCTV', 
-    status: ProjectStatus.COMPLETED, 
-    dueDate: getDate(-10), 
+    id: 'p2', 
+    title: 'Yearly Retainer', 
+    client: 'Croptell Crop Science', 
+    status: ProjectStatus.RETAINER, 
+    dueDate: getDate(300), 
     progress: 100, 
-    budget: 300000,
+    budget: 8000,
     tasks: [] 
   },
   { 
-    id: '4', 
-    title: 'EduLearn LMS Platform', 
-    client: 'EduLearn', 
+    id: 'p3', 
+    title: 'Yearly Maintenance', 
+    client: 'Vishwashanthi', 
+    status: ProjectStatus.RETAINER, 
+    dueDate: getDate(250), 
+    progress: 100, 
+    budget: 10000,
+    tasks: [] 
+  },
+  { 
+    id: 'p4', 
+    title: 'Yearly Support', 
+    client: 'Magamanikaya', 
+    status: ProjectStatus.RETAINER, 
+    dueDate: getDate(180), 
+    progress: 100, 
+    budget: 6000,
+    tasks: [] 
+  },
+  { 
+    id: 'p5', 
+    title: 'BMS Project', 
+    client: 'BMS', 
     status: ProjectStatus.DELIVERY, 
     dueDate: getDate(5), 
-    progress: 90, 
-    budget: 1800000,
+    progress: 95, 
+    budget: 22000,
     tasks: [
-        { id: 't4', title: 'Final QA Testing', assignee: 'QA', priority: 'High' }
+        { id: 't5', title: 'Payment Pending', assignee: 'Account', priority: 'High' }
+    ] 
+  },
+  { 
+    id: 'p6', 
+    title: 'Food Pre-booking App', 
+    client: 'Food Pre-booking Client', 
+    status: ProjectStatus.PRODUCTION, 
+    dueDate: getDate(45), 
+    progress: 40, 
+    budget: 122000,
+    tasks: [
+        { id: 't6a', title: 'Vendor Module', assignee: 'Dev', priority: 'High' },
+        { id: 't6b', title: 'User End', assignee: 'Dev', priority: 'Medium' }
     ] 
   },
 ];
 
 export const MOCK_INVOICES: Invoice[] = [
-  { id: 'INV-2024-001', client: 'City Care Hospital', amount: 500000, date: getDate(-30), status: 'Paid' },
-  { id: 'INV-2024-002', client: 'Tasty Bites', amount: 1250000, date: getDate(-5), status: 'Pending' },
-  { id: 'INV-2024-003', client: 'SecureView CCTV', amount: 350000, date: getDate(-45), status: 'Overdue' },
-  { id: 'INV-2024-004', client: 'EduLearn Systems', amount: 900000, date: getDate(0), status: 'Pending' },
+  { id: 'INV-001', client: 'Iqbal Patel School', amount: 15000, date: getDate(-30), status: 'Paid' },
+  { id: 'INV-002', client: 'Croptell Crop Science', amount: 8000, date: getDate(-60), status: 'Paid' },
+  { id: 'INV-003', client: 'Food Pre-booking Client', amount: 24400, date: getDate(-10), status: 'Paid' }, // 20% advance
+  { id: 'INV-004', client: 'BMS', amount: 22000, date: getDate(-5), status: 'Pending' },
 ];
 
 export const MOCK_CAMPAIGNS: MarketingCampaign[] = [
@@ -98,12 +137,11 @@ export const MOCK_CAMPAIGNS: MarketingCampaign[] = [
 export const MOCK_APPLICATIONS: JobApplication[] = [
   { id: 'a1', applicantName: 'Ravi Verma', email: 'ravi@gmail.com', role: 'Business Development Associate', appliedDate: getDate(-2), status: ApplicationStatus.NEW, phone: '9898989898', resumeUrl: '#' },
   { id: 'a2', applicantName: 'Sita Sharma', email: 'sita@yahoo.com', role: 'Business Development Associate', appliedDate: getDate(-5), status: ApplicationStatus.SCREENING, phone: '9797979797', resumeUrl: '#' },
-  { id: 'a3', applicantName: 'Manoj Kumar', email: 'manoj@outlook.com', role: 'Frontend Developer', appliedDate: getDate(-10), status: ApplicationStatus.INTERVIEW, phone: '9696969696', resumeUrl: '#' },
 ];
 
 export const DASHBOARD_STATS = [
   { title: 'Total Revenue', value: '₹68,50,000', change: '+12.5%', positive: true },
   { title: 'Active Leads', value: '24', change: '+4 this week', positive: true },
-  { title: 'Projects Active', value: '8', change: '-1 completed', positive: false },
-  { title: 'Pending Invoices', value: '₹21,50,000', change: '1 overdue', positive: false },
+  { title: 'Projects Active', value: '6', change: '-1 completed', positive: false },
+  { title: 'Pending Invoices', value: '₹22,000', change: '1 overdue', positive: false },
 ];
