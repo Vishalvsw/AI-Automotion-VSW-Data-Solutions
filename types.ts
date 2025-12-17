@@ -1,17 +1,7 @@
 
-
 export enum UserRole {
-  ADMIN = 'ADMIN',
-  PROJECT_MANAGER = 'PROJECT_MANAGER',
-  BDA = 'BDA',
-  DEVELOPER = 'DEVELOPER',
-  CLIENT = 'CLIENT',
-  HR_MANAGER = 'HR_MANAGER',
-  CEO = 'CEO',
   FOUNDER = 'FOUNDER',
-  CTO = 'CTO',
-  MARKETING_MANAGER = 'MARKETING_MANAGER',
-  FINANCE_MANAGER = 'FINANCE_MANAGER'
+  BDA = 'BDA'
 }
 
 export interface User {
@@ -40,6 +30,23 @@ export enum ActivityType {
   VISIT = 'Business Visit',
   QUOTATION = 'Quotation Sent',
   REQUIREMENTS = 'Requirements Gathering'
+}
+
+export interface QuotationModule {
+  id: string;
+  name: string;
+  description: string;
+  price: number; // Fixed at 20000
+}
+
+export interface Quotation {
+  id: string;
+  leadId: string;
+  modules: QuotationModule[];
+  totalAmount: number;
+  tax: number;
+  grandTotal: number;
+  createdAt: string;
 }
 
 export interface Lead {
@@ -99,47 +106,4 @@ export interface MarketingCampaign {
   status: 'Active' | 'Paused' | 'Draft';
   budget: number;
   leadsGenerated: number;
-}
-
-export interface Meeting {
-  id: string;
-  leadId: string;
-  leadName: string;
-  date: string;
-  time: string;
-  type: 'Demo' | 'Discovery' | 'Closing';
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
-}
-
-export interface OnboardingStep {
-  id: string;
-  title: string;
-  completed: boolean;
-}
-
-export interface OnboardingFlow {
-  leadId: string;
-  steps: OnboardingStep[];
-  generatedProposalUrl?: string;
-  invoiceId?: string;
-}
-
-export enum ApplicationStatus {
-  NEW = 'New',
-  SCREENING = 'Screening',
-  INTERVIEW = 'Interview',
-  OFFER = 'Offer',
-  HIRED = 'Hired',
-  REJECTED = 'Rejected'
-}
-
-export interface JobApplication {
-  id: string;
-  applicantName: string;
-  email: string;
-  role: string;
-  appliedDate: string;
-  status: ApplicationStatus;
-  phone: string;
-  resumeUrl: string;
 }

@@ -74,7 +74,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
           id: `t-${Date.now()}`,
           title: newTaskTitle,
           assignee: 'Unassigned',
-          priority: newTaskPriority
+          priority: newTaskPriority // Use the state-defined priority which defaults to 'Medium'
       };
 
       const updatedProject = {
@@ -90,7 +90,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
 
   const handleToggleTask = (taskId: string) => {
       if (!selectedProject) return;
-      // Simulate deleting/completing task
       const updatedTasks = selectedProject.tasks.filter(t => t.id !== taskId);
       const updatedProject = { ...selectedProject, tasks: updatedTasks };
       
@@ -123,7 +122,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto overflow-y-hidden pb-2">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden pb-2 no-scrollbar">
         <div className="flex h-full gap-6 min-w-[1024px]">
           {columns.map((col) => (
             <div key={col.id} className="flex-1 flex flex-col h-full min-w-[280px] bg-slate-50/50 rounded-2xl border border-slate-200">
@@ -206,26 +205,26 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                 <form onSubmit={handleAddProject} className="p-6 space-y-4">
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-500 uppercase">Project Title</label>
-                        <input required name="title" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="e.g. E-Commerce App" />
+                        <input required name="title" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. E-Commerce App" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-500 uppercase">Client</label>
-                            <input required name="client" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="Client Name" />
+                            <input required name="client" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Client Name" />
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-500 uppercase">Budget (₹)</label>
-                            <input required name="budget" type="number" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="500000" />
+                            <input required name="budget" type="number" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="500000" />
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-500 uppercase">Due Date</label>
-                            <input required name="dueDate" type="date" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                            <input required name="dueDate" type="date" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-500 uppercase">Initial Status</label>
-                            <select name="status" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                            <select name="status" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none">
                                 {Object.values(ProjectStatus).map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
@@ -300,15 +299,18 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <select 
-                                            value={task.priority}
-                                            onChange={(e) => handlePriorityChange(task.id, e.target.value as any)}
-                                            className={`text-[10px] font-bold uppercase tracking-wider rounded-md border py-1 px-2 outline-none cursor-pointer hover:bg-white transition-all ${getPriorityColor(task.priority)}`}
-                                        >
-                                            <option value="Low">Low</option>
-                                            <option value="Medium">Medium</option>
-                                            <option value="High">High</option>
-                                        </select>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Priority:</span>
+                                            <select 
+                                                value={task.priority}
+                                                onChange={(e) => handlePriorityChange(task.id, e.target.value as any)}
+                                                className={`text-[10px] font-bold uppercase tracking-wider rounded-md border py-1 px-2 outline-none cursor-pointer hover:bg-white transition-all shadow-sm ${getPriorityColor(task.priority)}`}
+                                            >
+                                                <option value="Low">Low</option>
+                                                <option value="Medium">Medium</option>
+                                                <option value="High">High</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 ))
                             ) : (
@@ -325,14 +327,15 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                                     value={newTaskTitle}
                                     onChange={(e) => setNewTaskTitle(e.target.value)}
                                     placeholder="New task title..."
-                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none pr-24"
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none pr-32 bg-slate-50 focus:bg-white transition-all"
                                     onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
                                 />
-                                <div className="absolute right-1 top-1 bottom-1">
+                                <div className="absolute right-1.5 top-1.5 bottom-1.5 flex items-center">
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase mr-1 hidden sm:inline">Set Priority:</span>
                                     <select 
                                         value={newTaskPriority}
                                         onChange={(e) => setNewTaskPriority(e.target.value as any)}
-                                        className="h-full text-xs bg-slate-50 border-none rounded-md text-slate-600 font-medium focus:ring-0 cursor-pointer hover:bg-slate-100"
+                                        className="h-full text-xs bg-white border border-slate-200 rounded-lg text-slate-600 font-bold focus:ring-0 cursor-pointer hover:bg-slate-50 px-2"
                                     >
                                         <option value="Low">Low</option>
                                         <option value="Medium">Medium</option>
@@ -340,7 +343,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                                     </select>
                                 </div>
                              </div>
-                             <button onClick={handleAddTask} className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800">Add</button>
+                             <button onClick={handleAddTask} className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all">Add Task</button>
                         </div>
                     </div>
                 </div>
