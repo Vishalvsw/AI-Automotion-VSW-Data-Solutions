@@ -12,8 +12,9 @@ import Retention from './pages/Retention';
 import Settings from './pages/Settings';
 import { User, UserRole } from './types';
 import { Menu, Bell, Search } from 'lucide-react';
+import { AppProvider } from './context/AppContext';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -30,7 +31,6 @@ const App: React.FC = () => {
   }
 
   const isFounder = user.role === UserRole.FOUNDER;
-  const isBDA = user.role === UserRole.BDA;
 
   return (
     <Router>
@@ -44,21 +44,22 @@ const App: React.FC = () => {
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
-            >
-              <Menu size={20} />
-            </button>
-
-            <div className="hidden md:flex items-center flex-1 max-w-md ml-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="Global Workspace Search..." 
-                  className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 transition-all outline-none font-medium"
-                />
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+              >
+                <Menu size={20} />
+              </button>
+              <div className="hidden md:flex items-center flex-1 max-w-md">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Search Lead, Project or Task..." 
+                    className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 transition-all outline-none font-medium"
+                  />
+                </div>
               </div>
             </div>
 
@@ -70,7 +71,7 @@ const App: React.FC = () => {
               <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                 <div className="text-right hidden sm:block">
                   <div className="text-xs font-bold text-slate-900 leading-none">{user.name}</div>
-                  <div className="text-[10px] font-bold text-brand-600 uppercase mt-0.5">{user.role}</div>
+                  <div className="text-[10px] font-bold text-brand-600 uppercase mt-0.5 tracking-tighter">{user.role}</div>
                 </div>
                 <img 
                   src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} 
@@ -87,14 +88,11 @@ const App: React.FC = () => {
                 <Route path="/" element={<Dashboard user={user} />} />
                 <Route path="/leads" element={<Leads user={user} />} />
                 <Route path="/onboarding" element={<Leads user={user} />} />
-                
-                {/* Founder Specific Routes */}
                 <Route path="/projects" element={isFounder ? <Projects user={user} /> : <Navigate to="/" />} />
                 <Route path="/finance" element={isFounder ? <Finance /> : <Navigate to="/" />} />
                 <Route path="/marketing" element={isFounder ? <Marketing /> : <Navigate to="/" />} />
                 <Route path="/retention" element={isFounder ? <Retention /> : <Navigate to="/" />} />
                 <Route path="/settings" element={isFounder ? <Settings /> : <Navigate to="/" />} />
-                
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </div>
@@ -104,5 +102,11 @@ const App: React.FC = () => {
     </Router>
   );
 };
+
+const App: React.FC = () => (
+  <AppProvider>
+    <AppContent />
+  </AppProvider>
+);
 
 export default App;

@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
-import { MOCK_LEADS, MOCK_USERS } from '../services/mockData';
+import React, { useState } from 'react';
 import { LeadStatus, Lead, UserRole, ActivityType, User, QuotationModule, Quotation } from '../types';
-import { Search, Filter, Plus, Phone, Mail, MapPin, MessageSquare, FileText, CheckCircle, Calendar, AlertCircle, LayoutGrid, List, MoreHorizontal, Sparkles, X, User as UserIcon, Tag, DollarSign, Clock, Users, Download, Send, Printer, ShieldCheck } from 'lucide-react';
+import { Search, Filter, Plus, Phone, Mail, FileText, CheckCircle, Calendar, AlertCircle, LayoutGrid, List, MoreHorizontal, X, User as UserIcon, Tag, DollarSign, Send, Printer, ShieldCheck, Edit3 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 interface LeadsProps {
   user: User;
@@ -20,34 +20,24 @@ const STANDARD_MODULES: QuotationModule[] = [
 ];
 
 const Leads: React.FC<LeadsProps> = ({ user }) => {
-  const getInitialLeads = () => {
-    if (user.role === UserRole.BDA) {
-       return MOCK_LEADS.filter(l => 
-          l.assignedTo.toLowerCase().includes(user.name.split(' ')[0].toLowerCase()) ||
-          l.assignedTo === user.name
-       );
-    }
-    return MOCK_LEADS;
-  };
+  const { leads, updateLead, addLead } = useApp();
+  
+  // Filter leads based on BDA assignment
+  const myLeads = user.role === UserRole.BDA 
+    ? leads.filter(l => l.assignedTo.toLowerCase().includes(user.name.split(' ')[0].toLowerCase()) || l.assignedTo === user.name)
+    : leads;
 
-  const [leads, setLeads] = useState<Lead[]>(getInitialLeads());
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Quotation State
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [customModuleName, setCustomModuleName] = useState('');
   const [quotePreview, setQuotePreview] = useState<Quotation | null>(null);
-
-  useEffect(() => {
-    setLeads(getInitialLeads());
-  }, [user]);
-
-  const [activityNote, setActivityNote] = useState('');
-  const [activityType, setActivityType] = useState<ActivityType>(ActivityType.COLD_CALL);
-  const [nextFollowUpDate, setNextFollowUpDate] = useState('');
 
   const formatINR = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -62,13 +52,35 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
     return new Date(dateString) < today;
   };
 
-  const filteredLeads = filterOverdue ? leads.filter(l => isOverdue(l.nextFollowUp)) : leads;
+  const filteredLeads = filterOverdue ? myLeads.filter(l => isOverdue(l.nextFollowUp)) : myLeads;
 
   const handleOpenQuoteGenerator = (lead: Lead) => {
     setSelectedLead(lead);
     setIsQuoteModalOpen(true);
     setSelectedModules([]);
     setQuotePreview(null);
+  };
+
+  const handleOpenEditLead = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveLeadEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedLead) return;
+    const formData = new FormData(e.target as HTMLFormElement);
+    const updates = {
+      name: formData.get('name') as string,
+      company: formData.get('company') as string,
+      email: formData.get('email') as string,
+      value: Number(formData.get('value')),
+      status: formData.get('status') as LeadStatus,
+      nextFollowUp: formData.get('nextFollowUp') as string,
+    };
+    updateLead(selectedLead.id, updates);
+    setIsEditModalOpen(false);
+    setSelectedLead(null);
   };
 
   const toggleModule = (moduleId: string) => {
@@ -80,8 +92,19 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
   const generateQuotePreview = () => {
     if (!selectedLead) return;
     const modules = STANDARD_MODULES.filter(m => selectedModules.includes(m.id));
+    
+    // Support for custom module if name is provided
+    if (customModuleName) {
+      modules.push({ 
+        id: `custom-${Date.now()}`, 
+        name: customModuleName, 
+        description: 'Special project requirement', 
+        price: MODULE_PRICE 
+      });
+    }
+
     const total = modules.length * MODULE_PRICE;
-    const tax = total * 0.18; // 18% GST
+    const tax = total * 0.18; 
 
     const quote: Quotation = {
       id: `QTN-${Date.now().toString().slice(-6)}`,
@@ -97,27 +120,15 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
 
   const handleFinalizeQuote = () => {
     if (!selectedLead || !quotePreview) return;
-    
-    // Log Activity
-    const newActivity = {
-      type: ActivityType.QUOTATION,
-      date: new Date().toISOString().split('T')[0],
-      note: `Generated Quotation ${quotePreview.id} for ${formatINR(quotePreview.grandTotal)}. Modules: ${quotePreview.modules.map(m => m.name).join(', ')}`
-    };
-
-    const updatedLeads = leads.map(l => {
-      if (l.id === selectedLead.id) {
-        return {
-          ...l,
-          status: LeadStatus.PROPOSAL_SENT,
-          value: quotePreview.grandTotal,
-          activities: [...(l.activities || []), newActivity]
-        };
-      }
-      return l;
+    updateLead(selectedLead.id, {
+      status: LeadStatus.PROPOSAL_SENT,
+      value: quotePreview.grandTotal,
+      activities: [...(selectedLead.activities || []), {
+        type: ActivityType.QUOTATION,
+        date: new Date().toISOString().split('T')[0],
+        note: `Generated Quote ${quotePreview.id} for ${formatINR(quotePreview.grandTotal)}`
+      }]
     });
-
-    setLeads(updatedLeads);
     setIsQuoteModalOpen(false);
     setQuotePreview(null);
   };
@@ -139,7 +150,7 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">CRM & Pipeline</h1>
-          <p className="text-slate-500">Day 1-4 Closing Engine</p>
+          <p className="text-slate-500">Day 1-4 Closing Engine • {myLeads.length} Total Accounts</p>
         </div>
         <div className="flex items-center gap-3">
            <div className="flex bg-white border border-slate-200 rounded-lg p-1 shadow-sm">
@@ -152,7 +163,6 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
         </div>
       </div>
 
-      {/* CRM Actions Header */}
       <div className="flex flex-col sm:flex-row justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -177,19 +187,22 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
                 <th className="px-6 py-4 font-black">Pipeline Value</th>
                 <th className="px-6 py-4 font-black">Closing Stage</th>
                 <th className="px-6 py-4 font-black">Next Action</th>
-                <th className="px-6 py-4 font-black text-right">Quick Tools</th>
+                <th className="px-6 py-4 font-black text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filteredLeads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors">
+                <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 font-bold border border-brand-100">
                         {lead.company.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-bold text-slate-900">{lead.company}</div>
+                        <div className="font-bold text-slate-900 flex items-center gap-2">
+                           {lead.company}
+                           <button onClick={() => handleOpenEditLead(lead)} className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-brand-600 transition-all"><Edit3 size={12}/></button>
+                        </div>
                         <div className="text-[10px] text-slate-400 font-bold uppercase">{lead.name}</div>
                       </div>
                     </div>
@@ -206,12 +219,14 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
-                      onClick={() => handleOpenQuoteGenerator(lead)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold hover:bg-brand-600 hover:text-white transition-all group"
-                    >
-                      <FileText size={14} /> Quotation
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => handleOpenQuoteGenerator(lead)}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold hover:bg-brand-600 hover:text-white transition-all shadow-sm"
+                      >
+                        <FileText size={14} /> Quotation
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -219,6 +234,48 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
           </table>
         </div>
       </div>
+
+      {/* QUICK EDIT LEAD MODAL */}
+      {isEditModalOpen && selectedLead && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+              <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                 <h2 className="text-xl font-bold text-slate-900">Edit Lead Record</h2>
+                 <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full"><X size={20}/></button>
+              </div>
+              <form onSubmit={handleSaveLeadEdit} className="p-8 space-y-4">
+                 <div>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Company Name</label>
+                    <input name="company" defaultValue={selectedLead.company} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm font-bold" />
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Primary Contact</label>
+                        <input name="name" defaultValue={selectedLead.name} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm font-bold" />
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Deal Value (₹)</label>
+                        <input name="value" type="number" defaultValue={selectedLead.value} required className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm font-bold" />
+                    </div>
+                 </div>
+                 <div>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Status</label>
+                    <select name="status" defaultValue={selectedLead.status} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm font-bold bg-white">
+                        {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                 </div>
+                 <div>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Next Follow-up</label>
+                    <input name="nextFollowUp" type="date" defaultValue={selectedLead.nextFollowUp} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm font-bold" />
+                 </div>
+                 <div className="pt-4 flex gap-3">
+                    <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl">Cancel</button>
+                    <button type="submit" className="flex-1 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all">Update Lead</button>
+                 </div>
+              </form>
+           </div>
+        </div>
+      )}
 
       {/* QUOTATION GENERATOR MODAL */}
       {isQuoteModalOpen && selectedLead && (
@@ -250,24 +307,34 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
                         ))}
                      </div>
                      
+                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Add Custom Module (Dynamic Price: ₹20k)</label>
+                        <input 
+                           type="text" 
+                           placeholder="Enter custom requirement name..." 
+                           value={customModuleName}
+                           onChange={(e) => setCustomModuleName(e.target.value)}
+                           className="w-full px-4 py-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                        />
+                     </div>
+                     
                      <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
                         <div>
                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Est. Base Total</div>
-                           <div className="text-2xl font-black text-slate-900">{formatINR(selectedModules.length * MODULE_PRICE)}</div>
+                           <div className="text-2xl font-black text-slate-900">{formatINR((selectedModules.length + (customModuleName ? 1 : 0)) * MODULE_PRICE)}</div>
                         </div>
                         <button 
-                          disabled={selectedModules.length === 0}
+                          disabled={selectedModules.length === 0 && !customModuleName}
                           onClick={generateQuotePreview}
                           className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl shadow-slate-200 flex items-center gap-2"
                         >
-                           Preview Quote <ArrowRight size={18} />
+                           Preview Quote <Plus size={18} />
                         </button>
                      </div>
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col lg:flex-row h-full max-h-[90vh]">
-                   {/* Document Preview */}
                    <div className="flex-1 bg-slate-100 p-8 overflow-y-auto custom-scrollbar">
                       <div className="bg-white rounded-lg shadow-2xl p-10 max-w-[800px] mx-auto min-h-[1000px] flex flex-col font-sans">
                          <div className="flex justify-between items-start border-b-4 border-slate-900 pb-8 mb-10">
@@ -333,44 +400,24 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
                                </div>
                             </div>
                          </div>
-
-                         <div className="mt-20 pt-10 border-t border-slate-50">
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Commitment Terms</p>
-                               <ul className="text-[10px] text-slate-500 font-bold space-y-1">
-                                  <li>• 40% Advance payment required to begin production.</li>
-                                  <li>• Delivery timeline subject to requirement finalization.</li>
-                                  <li>• Quote valid for 7 days from generation date.</li>
-                               </ul>
-                            </div>
-                         </div>
                       </div>
                    </div>
 
-                   {/* Sidebar Controls */}
                    <div className="w-full lg:w-80 bg-white p-8 flex flex-col border-l border-slate-100 shadow-xl">
                       <div className="mb-8">
                          <h3 className="font-black text-slate-900 mb-2">Actions</h3>
-                         <p className="text-xs text-slate-500 font-medium leading-relaxed">Generated quote will be logged in the CRM and the lead value will be updated.</p>
+                         <p className="text-xs text-slate-500 font-medium leading-relaxed">Generated quote will update the lead value in the pipeline.</p>
                       </div>
-
                       <div className="space-y-3 flex-1">
                          <button onClick={handleFinalizeQuote} className="w-full py-4 bg-brand-600 text-white font-black rounded-2xl hover:bg-brand-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-brand-100">
-                            <Send size={18} /> Send & Save
+                            <Send size={18} /> Send & Update
                          </button>
                          <button onClick={() => window.print()} className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
                             <Printer size={18} /> Print Preview
                          </button>
                          <button onClick={() => setQuotePreview(null)} className="w-full py-4 bg-slate-50 text-slate-600 font-black rounded-2xl hover:bg-slate-100 transition-all">
-                            Back to Config
+                            Edit Modules
                          </button>
-                      </div>
-
-                      <div className="mt-10 p-4 bg-brand-50 rounded-2xl border border-brand-100">
-                         <div className="flex items-center gap-2 text-brand-700 font-black text-[10px] uppercase mb-1">
-                            <ShieldCheck size={14} /> Agency OS Verified
-                         </div>
-                         <p className="text-[10px] text-brand-600 font-bold italic leading-tight">"A professional quote is 50% of the closing process."</p>
                       </div>
                    </div>
                 </div>
@@ -378,14 +425,8 @@ const Leads: React.FC<LeadsProps> = ({ user }) => {
            </div>
         </div>
       )}
-
-      {/* Re-using Activity Modal from before but simplified for context */}
-      {/* ... keeping rest of file structure consistent ... */}
     </div>
   );
 };
-
-// Simple Arrow icon helper
-const ArrowRight = ({ size }: { size: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>;
 
 export default Leads;

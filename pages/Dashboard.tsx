@@ -1,31 +1,30 @@
 
 import React from 'react';
-import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, BarChart, Bar, Cell, PieChart, Pie } from 'recharts';
+import { ResponsiveContainer, XAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { Link } from 'react-router-dom';
 import DashboardCard from '../components/DashboardCard';
-import { MOCK_LEADS, MOCK_PROJECTS, MOCK_INVOICES } from '../services/mockData';
-import { IndianRupee, Users, AlertCircle, Briefcase, Zap, ShieldAlert, Target, TrendingUp, ArrowRight, Wallet, Clock, Activity, Globe } from 'lucide-react';
-import { UserRole, LeadStatus, User, ProjectStatus } from '../types';
+import { IndianRupee, Users, AlertCircle, Briefcase, Zap, ShieldAlert, Target, ArrowRight, Wallet, Clock, Activity, Globe } from 'lucide-react';
+import { UserRole, LeadStatus, User } from '../types';
+import { useApp } from '../context/AppContext';
 
 interface DashboardProps {
   user: User;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+  const { leads, projects, invoices } = useApp();
   const isFounder = user.role === UserRole.FOUNDER;
   
   const formatRupee = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
+      style: 'currency', currency: 'INR', maximumFractionDigits: 0,
     }).format(value);
   };
 
   const renderFounderDashboard = () => {
-    const totalPipelineValue = MOCK_LEADS.reduce((acc, curr) => acc + (curr.value || 0), 0);
-    const collectedRevenue = MOCK_INVOICES.filter(i => i.status === 'Paid').reduce((acc, curr) => acc + curr.amount, 0);
-    const pendingInvoices = MOCK_INVOICES.filter(i => i.status !== 'Paid').reduce((acc, curr) => acc + curr.amount, 0);
+    const totalPipelineValue = leads.reduce((acc, curr) => acc + (curr.value || 0), 0);
+    const collectedRevenue = invoices.filter(i => i.status === 'Paid').reduce((acc, curr) => acc + curr.amount, 0);
+    const pendingInvoices = invoices.filter(i => i.status !== 'Paid').reduce((acc, curr) => acc + curr.amount, 0);
 
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
@@ -35,7 +34,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <Globe size={14} /> Global Enterprise Dashboard
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome, Founder</h1>
-            <p className="text-slate-500 mt-1 font-medium">Monitoring VS Data Solutions global operations and financial health.</p>
+            <p className="text-slate-500 mt-1 font-medium">Monitoring real-time agency performance metrics.</p>
           </div>
           <div className="flex gap-3">
             <div className="bg-white border border-slate-200 px-5 py-3 rounded-2xl shadow-sm">
@@ -50,23 +49,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-           <DashboardCard title="Active Projects" value={MOCK_PROJECTS.length.toString()} change="Production Control" positive={true} icon={<Briefcase />} />
-           <DashboardCard title="Total Leads" value={MOCK_LEADS.length.toString()} change="Active Funnel" positive={true} icon={<Users />} />
+           <DashboardCard title="Active Projects" value={projects.length.toString()} change="Real-time" positive={true} icon={<Briefcase />} />
+           <DashboardCard title="Active Leads" value={leads.length.toString()} change="Sales Funnel" positive={true} icon={<Users />} />
            <DashboardCard title="Outstanding" value={formatRupee(pendingInvoices)} change="Action Req" positive={false} icon={<AlertCircle />} />
-           <DashboardCard title="Agency ROI" value="24%" change="+3% avg" positive={true} icon={<Target />} />
+           <DashboardCard title="Conversion" value="28%" change="+4%" positive={true} icon={<Target />} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
            <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-slate-900">Revenue Growth Trend</h3>
-                <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded-md">Real-time</span>
+                <h3 className="font-bold text-slate-900">Revenue Velocity</h3>
+                <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded-md">Live</span>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={[
                     { name: 'Jan', r: 300000 }, { name: 'Feb', r: 450000 }, { name: 'Mar', r: 380000 },
-                    { name: 'Apr', r: 600000 }, { name: 'May', r: 850000 }, { name: 'Jun', r: 1200000 }
+                    { name: 'Apr', r: 600000 }, { name: 'May', r: 850000 }, { name: 'Jun', r: collectedRevenue || 1200000 }
                   ]}>
                     <defs>
                       <linearGradient id="colorR" x1="0" y1="0" x2="0" y2="1">
@@ -86,9 +85,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
            <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
              <h3 className="font-bold text-slate-900 mb-6">Production Queue Health</h3>
              <div className="space-y-5">
-               {MOCK_PROJECTS.slice(0, 5).map(p => (
+               {projects.slice(0, 5).map(p => (
                  <div key={p.id} className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
                        <Briefcase size={20} />
                     </div>
                     <div className="flex-1">
@@ -113,7 +112,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   };
 
   const renderBDADashboard = () => {
-    const bdaLeads = MOCK_LEADS.filter(l => 
+    const bdaLeads = leads.filter(l => 
       l.assignedTo.toLowerCase().includes(user.name.split(' ')[0].toLowerCase()) || 
       l.assignedTo === user.name
     );
@@ -135,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <Zap size={14} /> Sales Cockpit (BDA)
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Go get 'em, {user.name.split(' ')[0]}</h1>
-            <p className="text-slate-500 mt-1 font-medium">No Money = No Work. Stick to the 4-Day closing system.</p>
+            <p className="text-slate-500 mt-1 font-medium">4-Day closing system active. Check follow-ups.</p>
           </div>
           <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-4 border border-indigo-500/20">
              <div className="p-3 bg-white/10 rounded-xl"><IndianRupee size={24} className="text-brand-400" /></div>
@@ -160,7 +159,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Strategy Card */}
           <div className="lg:col-span-1 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
                <Zap size={80} className="text-brand-600" />
@@ -198,14 +196,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm h-full">
                <h3 className="font-bold text-slate-900 mb-5 flex items-center gap-2">
                   <Clock size={18} className="text-brand-500" />
-                  Upcoming Follow-ups
+                  Next Up (Follow-ups)
                </h3>
                <div className="space-y-3">
                   {bdaLeads.slice(0, 5).map(lead => (
                     <div key={lead.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-sm transition-all group cursor-pointer">
                        <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center font-bold text-slate-900 text-xs shadow-sm">
-                             {lead.name.charAt(0)}
+                             {lead.company.charAt(0)}
                           </div>
                           <div>
                              <div className="text-xs font-bold text-slate-900">{lead.company}</div>
