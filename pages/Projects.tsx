@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { ProjectStatus, Project, Task, User } from '../types';
+// Fixed: Removed Task from import as it is not exported from types.ts
+import { ProjectStatus, Project, User } from '../types';
 import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 

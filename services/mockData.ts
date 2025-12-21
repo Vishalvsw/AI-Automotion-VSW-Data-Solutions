@@ -1,5 +1,5 @@
 
-import { Lead, LeadStatus, Project, ProjectStatus, Invoice, UserRole, User, MarketingCampaign } from '../types';
+import { Lead, LeadStatus, Project, ProjectStatus, Invoice, UserRole, User, MarketingCampaign, LeadSource } from '../types';
 
 // Helper to get dates relative to today
 const getDate = (diffDays: number) => {
@@ -29,13 +29,14 @@ export const MOCK_USERS: User[] = [
 ];
 
 export const MOCK_LEADS: Lead[] = [
-  { id: 'l1', name: 'Satish', company: 'CNC-Satish', email: 'satish@cnc.com', value: 16000, status: LeadStatus.CONTACTED, lastContact: getDate(-1), nextFollowUp: '2024-11-24', assignedTo: 'Sneha', score: 30, tags: ['Still not ready'], source: 'Referral' },
-  { id: 'l2', name: 'Shiva', company: 'CCTV Shiva - Bharath Digital', email: 'shiva@cctv.com', value: 158000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 85, tags: ['WAITING FOR ADVANCE'], source: 'Direct' },
-  { id: 'l3', name: 'Owner', company: 'Thakur Dhaba', email: 'thakur@dhaba.com', value: 35000, status: LeadStatus.NEW, lastContact: getDate(0), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 15, tags: ['Day 1 Filter'], source: 'Visit' },
-  { id: 'l4', name: 'Manager', company: 'NK Fintech', email: 'manager@nk.com', value: 60000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: getDate(3), assignedTo: 'Sneha', score: 55, tags: ['Discovery Paid'], source: 'Outbound' },
-  { id: 'l5', name: 'Client', company: 'Shoba Home Services', email: 'shoba@services.com', value: 40000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-2), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 70, tags: ['Day 3 Proposal'], source: 'Referral' },
-  { id: 'l6', name: 'Tech Lead', company: 'Yutech - ecommerce', email: 'info@yutech.com', value: 250000, status: LeadStatus.CLOSED_WON, lastContact: getDate(-5), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 100, tags: ['Advance Paid'], source: 'Inbound' },
-  { id: 'l24', name: 'Iqbal', company: 'Iqbal patel school', email: 'iqbal@school.edu', value: 15000, status: LeadStatus.CLOSED_WON, lastContact: getDate(-10), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 100, tags: ['Paid'], source: 'Direct' },
+  // Fixed: Added missing 'phone' and 'priority' properties to satisfy the Lead interface
+  { id: 'l1', name: 'Satish', company: 'CNC-Satish', email: 'satish@cnc.com', phone: '9123456780', value: 16000, status: LeadStatus.CONTACTED, lastContact: getDate(-1), nextFollowUp: '2024-11-24', assignedTo: 'Sneha', score: 30, tags: ['Still not ready'], source: LeadSource.REFERRAL, priority: 'Cold' },
+  { id: 'l2', name: 'Shiva', company: 'CCTV Shiva - Bharath Digital', email: 'shiva@cctv.com', phone: '9123456781', value: 158000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 85, tags: ['WAITING FOR ADVANCE'], source: LeadSource.DIRECT, priority: 'Hot' },
+  { id: 'l3', name: 'Owner', company: 'Thakur Dhaba', email: 'thakur@dhaba.com', phone: '9123456782', value: 35000, status: LeadStatus.NEW, lastContact: getDate(0), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 15, tags: ['Day 1 Filter'], source: LeadSource.VISIT, priority: 'Cold' },
+  { id: 'l4', name: 'Manager', company: 'NK Fintech', email: 'manager@nk.com', phone: '9123456783', value: 60000, status: LeadStatus.MEETING_SCHEDULED, lastContact: getDate(-1), nextFollowUp: getDate(3), assignedTo: 'Sneha', score: 55, tags: ['Discovery Paid'], source: LeadSource.OUTBOUND, priority: 'Warm' },
+  { id: 'l5', name: 'Client', company: 'Shoba Home Services', email: 'shoba@services.com', phone: '9123456784', value: 40000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-2), nextFollowUp: getDate(1), assignedTo: 'Sneha', score: 70, tags: ['Day 3 Proposal'], source: LeadSource.REFERRAL, priority: 'Warm' },
+  { id: 'l6', name: 'Tech Lead', company: 'Yutech - ecommerce', email: 'info@yutech.com', phone: '9123456785', value: 250000, status: LeadStatus.CLOSED_WON, lastContact: getDate(-5), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 100, tags: ['Advance Paid'], source: LeadSource.INBOUND, priority: 'Hot' },
+  { id: 'l24', name: 'Iqbal', company: 'Iqbal patel school', email: 'iqbal@school.edu', phone: '9123456786', value: 15000, status: LeadStatus.CLOSED_WON, lastContact: getDate(-10), nextFollowUp: getDate(0), assignedTo: 'Sneha', score: 100, tags: ['Paid'], source: LeadSource.DIRECT, priority: 'Hot' },
 ];
 
 export const MOCK_PROJECTS: Project[] = [
