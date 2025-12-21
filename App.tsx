@@ -37,6 +37,7 @@ const AppContent: React.FC = () => {
   }
 
   const isFounder = user.role === UserRole.FOUNDER;
+  const isFinance = user.role === UserRole.FINANCE;
 
   return (
     <Router>
@@ -105,7 +106,7 @@ const AppContent: React.FC = () => {
                 <Route path="/leads" element={<Leads user={user} />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/projects" element={<Projects user={user} />} />
-                <Route path="/finance" element={isFounder ? <Finance /> : <Navigate to="/" />} />
+                <Route path="/finance" element={isFounder || isFinance ? <Finance /> : <Navigate to="/" />} />
                 <Route path="/marketing" element={isFounder ? <Marketing /> : <Navigate to="/" />} />
                 <Route path="/retention" element={isFounder ? <Retention /> : <Navigate to="/" />} />
                 <Route path="/settings" element={<Settings user={user} />} />

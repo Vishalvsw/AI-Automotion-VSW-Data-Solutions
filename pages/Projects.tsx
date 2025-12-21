@@ -11,7 +11,8 @@ interface ProjectsProps {
 
 const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const { projects, updateProject, addProject } = useApp();
-  const isAdmin = user.role === UserRole.FOUNDER;
+  const canEditFinance = user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE;
+  const canManageNodes = user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE || user.role === UserRole.DEVELOPER || user.role === UserRole.DESIGNER;
   
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [viewMode, setViewMode] = useState<'kanban' | 'ledger'>('ledger');
@@ -81,7 +82,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const isOverdue = (dateString: string) => new Date(dateString) < new Date();
 
   const handleUpdateMilestone = (id: string, milestone: keyof TechMilestones, val: boolean) => {
-    if (!isAdmin) return;
+    if (!canManageNodes) return;
     const project = projects.find(p => p.id === id);
     if (!project) return;
     const newMilestones = { ...project.techMilestones, [milestone]: val };
@@ -92,7 +93,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   };
 
   const handleUpdateFinancials = (id: string, field: keyof ProjectFinancials, val: number) => {
-    if (!isAdmin) return;
+    if (!canEditFinance) return;
     const project = projects.find(p => p.id === id);
     if (!project) return;
     const newFinancials = { ...project.financials, [field]: val };
@@ -107,7 +108,8 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   };
 
   const handleUpdateTaskStatus = (projectId: string, taskId: string, newStatus: TaskStatus) => {
-    if (!isAdmin) return;
+    // Only Founder, Finance or assigned user can update status (for simplicity we allow all management roles here)
+    if (!canManageNodes) return;
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
     
@@ -126,14 +128,14 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Production Intelligence</h1>
-          <p className="text-slate-500 font-medium">Cycle 2026-27 | Financial & Technical Command</p>
+          <p className="text-slate-500 font-medium">Cycle 2026-27 | Operational Command</p>
         </div>
         <div className="flex items-center gap-3">
            <div className="flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
               <button onClick={() => setViewMode('kanban')} className={`p-2 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}><LayoutGrid size={18} /></button>
               <button onClick={() => setViewMode('ledger')} className={`p-2 rounded-lg transition-all ${viewMode === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}><Table size={18} /></button>
            </div>
-           {isAdmin && (
+           {(user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE) && (
              <button className="px-6 py-3 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-700 transition-all shadow-xl shadow-brand-100">Deploy New Node</button>
            )}
         </div>
@@ -257,18 +259,18 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                  {/* Financial Flow */}
                  <div className="space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><IndianRupee size={18} className="text-brand-600" /> Financial Flow</h3>
-                    {!isAdmin && (
+                    {!canEditFinance && (
                       <div className="p-4 bg-amber-50 text-amber-700 rounded-2xl border border-amber-100 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest mb-4">
-                        <Lock size={14} /> Read-only access for BDAs
+                        <Lock size={14} /> Read-only access for technical roles
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-4">
                        <div className="p-5 bg-slate-50 rounded-2xl">
                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Grand Total</label>
                           <input 
-                            disabled={!isAdmin}
+                            disabled={!canEditFinance}
                             type="number" 
-                            className={`w-full bg-transparent border-none p-0 font-black text-lg outline-none ${isAdmin ? 'text-slate-900' : 'text-slate-400'}`} 
+                            className={`w-full bg-transparent border-none p-0 font-black text-lg outline-none ${canEditFinance ? 'text-slate-900' : 'text-slate-400'}`} 
                             value={selectedProject.financials.total}
                             onChange={(e) => handleUpdateFinancials(selectedProject.id, 'total', Number(e.target.value))}
                           />
@@ -276,9 +278,9 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                        <div className="p-5 bg-green-50 rounded-2xl">
                           <label className="text-[9px] font-black text-green-400 uppercase tracking-widest">Advance Paid</label>
                           <input 
-                            disabled={!isAdmin}
+                            disabled={!canEditFinance}
                             type="number" 
-                            className={`w-full bg-transparent border-none p-0 font-black text-lg outline-none ${isAdmin ? 'text-green-700' : 'text-green-400'}`} 
+                            className={`w-full bg-transparent border-none p-0 font-black text-lg outline-none ${canEditFinance ? 'text-green-700' : 'text-green-400'}`} 
                             value={selectedProject.financials.advance}
                             onChange={(e) => handleUpdateFinancials(selectedProject.id, 'advance', Number(e.target.value))}
                           />
@@ -295,7 +297,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                        </h3>
                     </div>
 
-                    {isAdmin && (
+                    {canManageNodes && (
                       <div className="relative group">
                          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
                             <Plus size={16} className="text-slate-300" />
@@ -339,7 +341,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                                </div>
                             </div>
                             <div className="flex items-center gap-2">
-                               {isAdmin ? (
+                               {canManageNodes ? (
                                  <select 
                                    value={task.status}
                                    onChange={(e) => handleUpdateTaskStatus(selectedProject.id, task.id, e.target.value as TaskStatus)}
@@ -379,9 +381,9 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                        {Object.entries(selectedProject.techMilestones).map(([key, val]) => (
                          <button 
                             key={key}
-                            disabled={!isAdmin}
+                            disabled={!canManageNodes}
                             onClick={() => handleUpdateMilestone(selectedProject.id, key as any, !val)}
-                            className={`p-5 rounded-3xl border-2 transition-all flex items-center justify-between group ${val ? 'border-green-600 bg-green-50/50' : 'border-slate-100 bg-white hover:border-slate-200'} ${!isAdmin && 'cursor-default'}`}
+                            className={`p-5 rounded-3xl border-2 transition-all flex items-center justify-between group ${val ? 'border-green-600 bg-green-50/50' : 'border-slate-100 bg-white hover:border-slate-200'} ${!canManageNodes && 'cursor-default'}`}
                          >
                             <span className={`text-xs font-black uppercase tracking-widest ${val ? 'text-green-700' : 'text-slate-400 group-hover:text-slate-600'}`}>{key}</span>
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${val ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-200'}`}>

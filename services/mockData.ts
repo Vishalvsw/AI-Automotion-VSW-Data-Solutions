@@ -12,6 +12,7 @@ export const MOCK_USERS: User[] = [
   { id: '2', name: 'Sneha (BDA)', email: 'sneha@vswdata.in', role: UserRole.BDA, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha', commissionRate: 8, phoneNumber: '9876543212' },
   { id: '3', name: 'Rahul (Dev)', email: 'rahul@vswdata.in', role: UserRole.DEVELOPER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul', phoneNumber: '9876543215' },
   { id: '4', name: 'Priya (Designer)', email: 'priya@vswdata.in', role: UserRole.DESIGNER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya', phoneNumber: '9876543216' },
+  { id: '5', name: 'Karan (Finance)', email: 'karan@vswdata.in', role: UserRole.FINANCE, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Karan', phoneNumber: '9876543217' },
 ];
 
 export const MOCK_LEADS: Lead[] = [

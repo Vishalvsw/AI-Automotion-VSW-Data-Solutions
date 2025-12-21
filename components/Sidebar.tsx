@@ -16,7 +16,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
 
   const getLinks = () => {
     const isFounder = role === UserRole.FOUNDER;
+    const isFinance = role === UserRole.FINANCE;
     const isBDA = role === UserRole.BDA;
+    const isDevOrDesigner = role === UserRole.DEVELOPER || role === UserRole.DESIGNER;
 
     const links = [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
@@ -27,9 +29,15 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
       links.push({ icon: Layers, label: 'Onboarding', path: '/onboarding' });
     }
 
-    if (isFounder) {
+    if (isFounder || isFinance || isDevOrDesigner) {
       links.push({ icon: Briefcase, label: 'Operations', path: '/projects' });
+    }
+
+    if (isFounder || isFinance) {
       links.push({ icon: IndianRupee, label: 'Financials', path: '/finance' });
+    }
+
+    if (isFounder) {
       links.push({ icon: Megaphone, label: 'Marketing', path: '/marketing' });
     }
 
@@ -66,7 +74,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
 
         <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
           <div className="mb-4 px-6 text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
-            {role === UserRole.FOUNDER ? 'Main Intelligence' : 'Sales Command'}
+            {role === UserRole.FOUNDER ? 'Main Intelligence' : 
+             role === UserRole.FINANCE ? 'Finance Command' : 'Operational Command'}
           </div>
           {getLinks().map((link) => (
             <Link 

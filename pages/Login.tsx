@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { UserRole, User } from '../types';
 import { MOCK_USERS } from '../services/mockData';
-import { Smartphone, ArrowRight, ShieldCheck, User as UserIcon, Mail, Loader2, Briefcase, Zap } from 'lucide-react';
+import { Smartphone, ArrowRight, ShieldCheck, User as UserIcon, Mail, Loader2, Briefcase, Zap, IndianRupee } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -69,25 +69,33 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
       <div className="mb-10 w-full max-w-sm">
-         <div className="bg-white rounded-2xl border border-slate-200 p-2 shadow-xl flex gap-2">
+         <div className="bg-white rounded-2xl border border-slate-200 p-2 shadow-xl flex gap-1">
             <button 
               onClick={() => onLogin(MOCK_USERS.find(u => u.role === UserRole.FOUNDER)!)}
-              className="flex-1 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group"
+              className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group"
             >
-               <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                  <ShieldCheck size={20} />
+               <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                  <ShieldCheck size={16} />
                </div>
-               <span className="text-xs font-bold text-slate-700">Founder Entry</span>
+               <span className="text-[10px] font-bold text-slate-700">Founder</span>
             </button>
-            <div className="w-[1px] bg-slate-100 my-4"></div>
+            <button 
+              onClick={() => onLogin(MOCK_USERS.find(u => u.role === UserRole.FINANCE)!)}
+              className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group"
+            >
+               <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
+                  <IndianRupee size={16} />
+               </div>
+               <span className="text-[10px] font-bold text-slate-700">Finance</span>
+            </button>
             <button 
               onClick={() => onLogin(MOCK_USERS.find(u => u.role === UserRole.BDA)!)}
-              className="flex-1 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group"
+              className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 group"
             >
-               <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
-                  <Briefcase size={20} />
+               <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                  <Briefcase size={16} />
                </div>
-               <span className="text-xs font-bold text-slate-700">BDA Entry</span>
+               <span className="text-[10px] font-bold text-slate-700">BDA</span>
             </button>
          </div>
          <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">System Identity Select</p>
