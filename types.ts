@@ -53,7 +53,7 @@ export enum ActivityType {
 
 export interface Requirement {
   serviceType: ServiceType;
-  details: any; // Dynamic based on service
+  details: any; 
   painPoints: string[];
   proposedSolutions: string[];
 }
@@ -79,7 +79,7 @@ export interface QuotationPlan {
   price: number;
   timeline: string;
   idealFor: string;
-  featureLevels: Record<string, string>; // moduleId -> "Basic", "Advanced", "Full", etc.
+  featureLevels: Record<string, string>;
 }
 
 export interface Quotation {
@@ -116,10 +116,31 @@ export interface Lead {
 
 export enum ProjectStatus {
   REQUIREMENTS = 'Requirements',
-  PRODUCTION = 'Production',
-  DELIVERY = 'Delivery',
+  PRODUCTION = 'In Progress',
+  DELIVERY = 'Ready',
   COMPLETED = 'Completed',
-  RETAINER = 'Retainer/Support'
+  RETAINER = 'Retainer/Support',
+  DROPPED = 'Dropped'
+}
+
+export interface ProjectFinancials {
+  basePrice: number;
+  total: number;
+  advance: number;
+  stage1: number;
+  stage2: number;
+  stage3: number;
+  totalPaid: number;
+  balance: number;
+}
+
+export interface TechMilestones {
+  demo: boolean;
+  frontend: boolean;
+  backend: boolean;
+  deployment: boolean;
+  domain: boolean;
+  api: boolean;
 }
 
 export interface Project {
@@ -127,9 +148,11 @@ export interface Project {
   title: string;
   client: string;
   status: ProjectStatus;
+  notes: string;
   dueDate: string;
   progress: number;
-  budget: number;
+  financials: ProjectFinancials;
+  techMilestones: TechMilestones;
   tasks: { id: string; title: string; assignee: string; priority: string }[];
 }
 

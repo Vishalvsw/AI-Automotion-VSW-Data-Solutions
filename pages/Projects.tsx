@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
-// Fixed: Removed Task from import as it is not exported from types.ts
-import { ProjectStatus, Project, User } from '../types';
-import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials } from '../types';
+// Fixed: Added IndianRupee to the lucide-react imports
+import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface ProjectsProps {
@@ -12,15 +12,16 @@ interface ProjectsProps {
 const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const { projects, updateProject, addProject } = useApp();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'kanban' | 'ledger'>('ledger');
   const [isEditDetailsMode, setIsEditDetailsMode] = useState(false);
   
   const columns = [
     { id: ProjectStatus.REQUIREMENTS, title: 'Requirements', color: 'bg-purple-50 text-purple-700', icon: FileText },
-    { id: ProjectStatus.PRODUCTION, title: 'Production', color: 'bg-blue-50 text-blue-700', icon: Code },
-    { id: ProjectStatus.DELIVERY, title: 'Delivery', color: 'bg-indigo-50 text-indigo-700', icon: Send },
+    { id: ProjectStatus.PRODUCTION, title: 'In Progress', color: 'bg-blue-50 text-blue-700', icon: Code },
+    { id: ProjectStatus.DELIVERY, title: 'Ready', color: 'bg-indigo-50 text-indigo-700', icon: Send },
     { id: ProjectStatus.COMPLETED, title: 'Completed', color: 'bg-green-50 text-green-700', icon: CheckSquare },
     { id: ProjectStatus.RETAINER, title: 'Retainer', color: 'bg-orange-50 text-orange-700', icon: Clock },
+    { id: ProjectStatus.DROPPED, title: 'Dropped', color: 'bg-slate-50 text-slate-500', icon: Minus },
   ];
 
   const formatINR = (amount: number) => {
@@ -31,185 +32,289 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
 
   const isOverdue = (dateString: string) => new Date(dateString) < new Date();
 
-  const handleUpdateProgress = (id: string, progress: number) => {
-    updateProject(id, { progress });
+  const handleUpdateMilestone = (id: string, milestone: keyof TechMilestones, val: boolean) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+    const newMilestones = { ...project.techMilestones, [milestone]: val };
+    updateProject(id, { techMilestones: newMilestones });
     if (selectedProject?.id === id) {
-      setSelectedProject({ ...selectedProject, progress });
+      setSelectedProject({ ...selectedProject, techMilestones: newMilestones });
     }
   };
 
-  const handleSaveDetails = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProject) return;
-    const formData = new FormData(e.target as HTMLFormElement);
-    const updates = {
-      title: formData.get('title') as string,
-      budget: Number(formData.get('budget')),
-      status: formData.get('status') as ProjectStatus,
-      progress: Number(formData.get('progress')),
-    };
-    updateProject(selectedProject.id, updates);
-    setSelectedProject({ ...selectedProject, ...updates });
-    setIsEditDetailsMode(false);
+  const handleUpdateFinancials = (id: string, field: keyof ProjectFinancials, val: number) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+    const newFinancials = { ...project.financials, [field]: val };
+    
+    // Recalculate totals
+    newFinancials.totalPaid = newFinancials.advance + newFinancials.stage1 + newFinancials.stage2 + newFinancials.stage3;
+    newFinancials.balance = newFinancials.totalPaid - newFinancials.total;
+
+    updateProject(id, { financials: newFinancials });
+    if (selectedProject?.id === id) {
+      setSelectedProject({ ...selectedProject, financials: newFinancials });
+    }
   };
 
   return (
-    <div className="h-[calc(100vh-2rem)] flex flex-col relative">
-      <div className="flex justify-between items-center mb-6">
-         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Project Operations</h1>
-          <p className="text-slate-500">Managing global production workflows.</p>
+    <div className="h-full flex flex-col space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Production Intelligence</h1>
+          <p className="text-slate-500 font-medium">Cycle 2026-27 | Financial & Technical Command</p>
         </div>
-        <button onClick={() => setIsAddProjectModalOpen(true)} className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 shadow-lg shadow-slate-200">Start New Project</button>
-      </div>
-
-      <div className="flex-1 overflow-x-auto overflow-y-hidden pb-2 no-scrollbar">
-        <div className="flex h-full gap-6 min-w-[1024px]">
-          {columns.map((col) => (
-            <div key={col.id} className="flex-1 flex flex-col h-full min-w-[280px] bg-slate-50/50 rounded-2xl border border-slate-200">
-              <div className="p-4 flex justify-between items-center sticky top-0 bg-slate-50/50 backdrop-blur-sm z-10">
-                <h3 className={`font-bold text-xs flex items-center gap-2 px-3 py-1.5 rounded-lg ${col.color}`}>
-                  <col.icon size={16} />
-                  {col.title}
-                </h3>
-                <span className="text-[10px] font-black text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100 shadow-sm">
-                  {projects.filter(p => p.status === col.id).length}
-                </span>
-              </div>
-              
-              <div className="flex-1 p-3 overflow-y-auto space-y-3 custom-scrollbar">
-                {projects.filter(p => p.status === col.id).map((project) => {
-                  const overdue = isOverdue(project.dueDate) && project.status !== ProjectStatus.COMPLETED;
-                  return (
-                    <div 
-                        key={project.id} 
-                        onClick={() => setSelectedProject(project)}
-                        className={`bg-white p-5 rounded-2xl border cursor-pointer transition-all group relative hover:-translate-y-1 duration-200 ${overdue ? 'border-red-200 shadow-red-50' : 'border-slate-200 shadow-sm hover:shadow-lg hover:border-brand-200'}`}
-                    >
-                        {overdue && (
-                            <div className="absolute top-4 right-4 text-red-500"><AlertTriangle size={16} /></div>
-                        )}
-                        <div className="mb-3">
-                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{project.client}</span>
-                            <h4 className="text-sm font-black text-slate-900 mt-0.5 leading-snug">{project.title}</h4>
-                        </div>
-                        
-                        <div className="mb-4">
-                            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1.5">
-                                <span>Production Health</span>
-                                <span className="text-brand-600">{project.progress}%</span>
-                            </div>
-                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                                <div 
-                                className={`h-2 rounded-full transition-all duration-500 ${project.progress === 100 ? 'bg-green-500' : overdue ? 'bg-red-500' : 'bg-brand-500'}`} 
-                                style={{ width: `${project.progress}%` }}
-                                ></div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                            <div className={`flex items-center gap-1.5 text-[10px] font-bold ${overdue ? 'text-red-600' : 'text-slate-400'}`}>
-                                <Clock size={14} />
-                                <span>{new Date(project.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                            </div>
-                            <span className="text-[10px] font-black text-slate-900">{formatINR(project.budget)}</span>
-                        </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center gap-3">
+           <div className="flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+              <button onClick={() => setViewMode('kanban')} className={`p-2 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}><LayoutGrid size={18} /></button>
+              <button onClick={() => setViewMode('ledger')} className={`p-2 rounded-lg transition-all ${viewMode === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}><Table size={18} /></button>
+           </div>
+           <button className="px-6 py-3 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-700 transition-all shadow-xl shadow-brand-100">Deploy New Node</button>
         </div>
       </div>
 
-      {/* PROJECT DETAILS & DYNAMIC EDIT MODAL */}
+      {viewMode === 'kanban' ? (
+        <div className="flex-1 overflow-x-auto overflow-y-hidden pb-2 no-scrollbar">
+          <div className="flex h-full gap-6 min-w-[1200px]">
+            {columns.map((col) => (
+              <div key={col.id} className="flex-1 flex flex-col h-full min-w-[300px] bg-slate-50/50 rounded-[32px] border border-slate-200">
+                <div className="p-6 flex justify-between items-center">
+                  <h3 className={`font-black text-[10px] uppercase tracking-widest flex items-center gap-2 px-3 py-1.5 rounded-xl ${col.color}`}>
+                    <col.icon size={14} />
+                    {col.title}
+                  </h3>
+                  <span className="text-[10px] font-black text-slate-400 bg-white px-2 py-1 rounded-lg border border-slate-100 shadow-sm">
+                    {projects.filter(p => p.status === col.id).length}
+                  </span>
+                </div>
+                
+                <div className="flex-1 px-4 pb-4 overflow-y-auto space-y-4 custom-scrollbar">
+                  {projects.filter(p => p.status === col.id).map((project) => {
+                    const overdue = isOverdue(project.dueDate) && project.status !== ProjectStatus.COMPLETED;
+                    return (
+                      <div 
+                          key={project.id} 
+                          onClick={() => setSelectedProject(project)}
+                          className={`bg-white p-6 rounded-[24px] border cursor-pointer transition-all hover:-translate-y-1 group relative ${overdue ? 'border-red-200 shadow-xl shadow-red-100' : 'border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-300'}`}
+                      >
+                          <div className="mb-4">
+                              <span className="text-[9px] font-black tracking-[0.2em] text-slate-400 uppercase">{project.client}</span>
+                              <h4 className="text-sm font-black text-slate-900 mt-1 leading-snug">{project.title}</h4>
+                              {project.notes && <p className="text-[10px] text-brand-600 font-bold mt-1 italic">"{project.notes}"</p>}
+                          </div>
+                          
+                          <div className="grid grid-cols-6 gap-1 mb-4">
+                             {Object.entries(project.techMilestones).map(([key, val]) => (
+                               <div key={key} className={`h-1.5 rounded-full ${val ? 'bg-green-500' : 'bg-slate-100'}`} title={key}></div>
+                             ))}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                              <div className="text-[10px] font-black text-slate-900">{formatINR(project.financials.total)}</div>
+                              <div className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase ${project.financials.balance < 0 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                                 {project.financials.balance === 0 ? 'Cleared' : `Bal: ${formatINR(Math.abs(project.financials.balance))}`}
+                              </div>
+                          </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 bg-white border border-slate-200 rounded-[32px] shadow-sm overflow-hidden flex flex-col">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead className="bg-slate-900 text-white text-[9px] font-black uppercase tracking-[0.2em] sticky top-0 z-20">
+                <tr>
+                  <th className="px-6 py-5 border-r border-slate-800">Project / Node</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">Base</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">Total</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">Adv.</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">S1</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">S2</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">Paid</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center bg-brand-600">Balance</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">Dmo</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">FE</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">BE</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">Dep</th>
+                  <th className="px-6 py-5 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {projects.map((p) => (
+                  <tr key={p.id} onClick={() => setSelectedProject(p)} className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                    <td className="px-6 py-4 border-r border-slate-50">
+                       <div className="font-black text-slate-900 text-xs">{p.client}</div>
+                       <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{p.title}</div>
+                    </td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center font-bold text-slate-500">{formatINR(p.financials.basePrice)}</td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center font-black text-slate-900">{formatINR(p.financials.total)}</td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-bold text-green-600">{formatINR(p.financials.advance)}</td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-bold text-slate-500">{p.financials.stage1 > 0 ? formatINR(p.financials.stage1) : '—'}</td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-bold text-slate-500">{p.financials.stage2 > 0 ? formatINR(p.financials.stage2) : '—'}</td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-black text-brand-600">{formatINR(p.financials.totalPaid)}</td>
+                    <td className={`px-4 py-4 border-r border-slate-50 text-center text-xs font-black ${p.financials.balance < 0 ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50'}`}>
+                       {formatINR(p.financials.balance)}
+                    </td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center">
+                       {p.techMilestones.demo ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
+                    </td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center">
+                       {p.techMilestones.frontend ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
+                    </td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center">
+                       {p.techMilestones.backend ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
+                    </td>
+                    <td className="px-4 py-4 border-r border-slate-50 text-center">
+                       {p.techMilestones.deployment ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                       <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+                         p.status === ProjectStatus.DELIVERY ? 'bg-green-50 text-green-600' :
+                         p.status === ProjectStatus.PRODUCTION ? 'bg-blue-50 text-blue-600' :
+                         p.status === ProjectStatus.DROPPED ? 'bg-slate-50 text-slate-400' :
+                         'bg-slate-50 text-slate-500'
+                       }`}>
+                         {p.status}
+                       </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* DETAIL DRAWER / OVERLAY */}
       {selectedProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-                <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div>
-                        <h2 className="text-xl font-black text-slate-900">{selectedProject.title}</h2>
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedProject.client}</div>
-                    </div>
-                    <div className="flex gap-2">
-                       <button onClick={() => setIsEditDetailsMode(!isEditDetailsMode)} className={`p-2 rounded-xl transition-all ${isEditDetailsMode ? 'bg-brand-600 text-white' : 'hover:bg-slate-100 text-slate-400'}`}><Edit3 size={20} /></button>
-                       <button onClick={() => setSelectedProject(null)} className="p-2 hover:bg-slate-100 text-slate-400 rounded-xl"><X size={20}/></button>
-                    </div>
-                </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="w-full max-w-xl h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
+              <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                 <div>
+                    <h2 className="text-2xl font-black text-slate-900">{selectedProject.client}</h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Ref ID: {selectedProject.id} | Cycle 2026-27</p>
+                 </div>
+                 <button onClick={() => setSelectedProject(null)} className="p-3 bg-white hover:bg-slate-100 rounded-2xl shadow-sm transition-all"><X size={24}/></button>
+              </div>
 
-                <div className="p-8 overflow-y-auto custom-scrollbar">
-                    {isEditDetailsMode ? (
-                       <form onSubmit={handleSaveDetails} className="space-y-6">
-                          <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Project Title</label>
-                                <input name="title" defaultValue={selectedProject.title} className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                             </div>
-                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Budget (₹)</label>
-                                <input name="budget" type="number" defaultValue={selectedProject.budget} className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                             </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Current Status</label>
-                                <select name="status" defaultValue={selectedProject.status} className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none bg-white">
-                                   {Object.values(ProjectStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                             </div>
-                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Completion Progress (%)</label>
-                                <input name="progress" type="number" min="0" max="100" defaultValue={selectedProject.progress} className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
-                             </div>
-                          </div>
-                          <div className="pt-4 flex gap-3">
-                             <button type="button" onClick={() => setIsEditDetailsMode(false)} className="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl">Cancel</button>
-                             <button type="submit" className="flex-1 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 shadow-xl shadow-slate-200">Save System Changes</button>
-                          </div>
-                       </form>
-                    ) : (
-                       <div className="space-y-8">
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                             <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div className="text-[10px] font-black text-slate-400 uppercase mb-1"><Target size={14} className="mb-1"/> Status</div>
-                                <div className="font-bold text-slate-900 text-xs">{selectedProject.status}</div>
-                             </div>
-                             <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div className="text-[10px] font-black text-slate-400 uppercase mb-1"><DollarSign size={14} className="mb-1"/> Budget</div>
-                                <div className="font-bold text-slate-900 text-xs">{formatINR(selectedProject.budget)}</div>
-                             </div>
-                             <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div className="text-[10px] font-black text-slate-400 uppercase mb-1"><Clock size={14} className="mb-1"/> Delivery</div>
-                                <div className="font-bold text-slate-900 text-xs">{new Date(selectedProject.dueDate).toLocaleDateString()}</div>
-                             </div>
-                             <div className="p-5 bg-brand-600 text-white rounded-2xl shadow-lg shadow-brand-100">
-                                <div className="text-[10px] font-black text-brand-100 uppercase mb-1">Progress</div>
-                                <div className="font-black text-xl">{selectedProject.progress}%</div>
-                             </div>
-                          </div>
+              <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
+                 {/* STRATEGIC CONTEXT */}
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Globe size={18} className="text-brand-600" /> Operational Context</h3>
+                    <div className="p-6 bg-brand-50 rounded-[32px] border border-brand-100">
+                       <p className="text-sm font-bold text-slate-700 italic">"{selectedProject.notes || 'No active operational notes.'}"</p>
+                    </div>
+                 </div>
 
-                          <div>
-                             <h3 className="text-sm font-black text-slate-900 mb-4 flex items-center gap-2">
-                                <CheckSquare size={18} className="text-brand-500" />
-                                Critical Milestones
-                             </h3>
-                             <div className="space-y-2">
-                                {selectedProject.tasks.map(t => (
-                                   <div key={t.id} className="p-4 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-sm">
-                                      <div className="flex items-center gap-3">
-                                         <div className="w-5 h-5 rounded border-2 border-slate-300"></div>
-                                         <span className="text-sm font-bold text-slate-700">{t.title}</span>
-                                      </div>
-                                      <span className="text-[10px] font-black text-slate-400 uppercase">{t.priority}</span>
-                                   </div>
-                                ))}
-                             </div>
-                          </div>
+                 {/* FINANCIAL COMMAND */}
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><IndianRupee size={18} className="text-brand-600" /> Financial Flow</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="p-5 bg-slate-50 rounded-2xl">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Grand Total</label>
+                          <input 
+                            type="number" 
+                            className="w-full bg-transparent border-none p-0 font-black text-lg text-slate-900 outline-none" 
+                            value={selectedProject.financials.total}
+                            onChange={(e) => handleUpdateFinancials(selectedProject.id, 'total', Number(e.target.value))}
+                          />
                        </div>
-                    )}
-                </div>
-            </div>
+                       <div className="p-5 bg-green-50 rounded-2xl">
+                          <label className="text-[9px] font-black text-green-400 uppercase tracking-widest">Advance Paid</label>
+                          <input 
+                            type="number" 
+                            className="w-full bg-transparent border-none p-0 font-black text-lg text-green-700 outline-none" 
+                            value={selectedProject.financials.advance}
+                            onChange={(e) => handleUpdateFinancials(selectedProject.id, 'advance', Number(e.target.value))}
+                          />
+                       </div>
+                       <div className="p-5 bg-slate-50 rounded-2xl">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Stage 1</label>
+                          <input 
+                            type="number" 
+                            className="w-full bg-transparent border-none p-0 font-black text-lg text-slate-900 outline-none" 
+                            value={selectedProject.financials.stage1}
+                            onChange={(e) => handleUpdateFinancials(selectedProject.id, 'stage1', Number(e.target.value))}
+                          />
+                       </div>
+                       <div className="p-5 bg-slate-50 rounded-2xl">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Stage 2</label>
+                          <input 
+                            type="number" 
+                            className="w-full bg-transparent border-none p-0 font-black text-lg text-slate-900 outline-none" 
+                            value={selectedProject.financials.stage2}
+                            onChange={(e) => handleUpdateFinancials(selectedProject.id, 'stage2', Number(e.target.value))}
+                          />
+                       </div>
+                    </div>
+                    <div className={`p-6 rounded-[32px] flex justify-between items-center ${selectedProject.financials.balance === 0 ? 'bg-green-600' : 'bg-slate-900'} text-white shadow-2xl`}>
+                        <div>
+                           <p className="text-[10px] font-black uppercase opacity-60">Revenue Balance</p>
+                           <h4 className="text-2xl font-black">{formatINR(selectedProject.financials.balance)}</h4>
+                        </div>
+                        <div className="text-right">
+                           <p className="text-[10px] font-black uppercase opacity-60">Total Collected</p>
+                           <h4 className="text-xl font-bold">{formatINR(selectedProject.financials.totalPaid)}</h4>
+                        </div>
+                    </div>
+                 </div>
+
+                 {/* TECH MILESTONES */}
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Server size={18} className="text-brand-600" /> Technical Architecture</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                       {Object.entries(selectedProject.techMilestones).map(([key, val]) => (
+                         <button 
+                            key={key}
+                            onClick={() => handleUpdateMilestone(selectedProject.id, key as any, !val)}
+                            className={`p-5 rounded-3xl border-2 transition-all flex items-center justify-between group ${val ? 'border-green-600 bg-green-50/50' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                         >
+                            <span className={`text-xs font-black uppercase tracking-widest ${val ? 'text-green-700' : 'text-slate-400 group-hover:text-slate-600'}`}>{key}</span>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${val ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-200'}`}>
+                               {val ? <Check size={14} /> : <Minus size={14} />}
+                            </div>
+                         </button>
+                       ))}
+                    </div>
+                 </div>
+
+                 {/* PRODUCTION STATUS */}
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Monitor size={18} className="text-brand-600" /> Pipeline Control</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Node Status</label>
+                          <select 
+                            value={selectedProject.status} 
+                            onChange={(e) => updateProject(selectedProject.id, { status: e.target.value as any })}
+                            className="w-full p-4 bg-slate-50 border-none rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-brand-500"
+                          >
+                             {Object.values(ProjectStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Delivery Date</label>
+                          <input 
+                            type="date" 
+                            className="w-full p-4 bg-slate-50 border-none rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-brand-500"
+                            value={selectedProject.dueDate}
+                            onChange={(e) => updateProject(selectedProject.id, { dueDate: e.target.value })}
+                          />
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="p-10 border-t border-slate-100 bg-white flex gap-4">
+                 <button className="flex-1 py-5 bg-slate-900 text-white font-black rounded-3xl text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all">Archive Node</button>
+                 <button onClick={() => setSelectedProject(null)} className="flex-1 py-5 border-2 border-slate-100 text-slate-500 font-black rounded-3xl text-sm uppercase tracking-widest hover:bg-slate-50 transition-all">Dismiss</button>
+              </div>
+           </div>
         </div>
       )}
     </div>
