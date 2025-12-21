@@ -45,22 +45,22 @@ const AppContent: React.FC = () => {
     <Router>
       <div className="flex h-screen bg-slate-50 overflow-hidden relative text-slate-900">
         <div 
-          className={`fixed inset-0 bg-gray-900/50 z-40 lg:hidden transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+          className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
           onClick={() => setSidebarOpen(false)}
         />
 
-        <Sidebar role={user.role} onLogout={handleLogout} isOpen={sidebarOpen} />
+        <Sidebar role={user.role} onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 relative z-[250]">
+          <header className="h-20 lg:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 relative z-[250]">
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                className="lg:hidden p-3 text-slate-600 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
               >
-                <Menu size={20} />
+                <Menu size={22} />
               </button>
-              <div className="hidden md:flex items-center flex-1 max-w-md">
+              <div className="hidden lg:flex items-center flex-1 max-w-md">
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
                   <input 
@@ -70,24 +70,27 @@ const AppContent: React.FC = () => {
                   />
                 </div>
               </div>
+              <div className="lg:hidden">
+                <span className="text-sm font-black tracking-tighter uppercase text-slate-900">AgencyOS</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <div className="relative">
                 <button 
                   onClick={() => setNotifOpen(!notifOpen)}
-                  className={`relative p-2 rounded-full transition-all ${notifOpen ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                  className={`relative p-3 rounded-xl transition-all ${notifOpen ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100'}`}
                 >
-                  <Bell size={18} />
+                  <Bell size={20} />
                   {unreadNotifCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 border-2 border-white rounded-full flex items-center justify-center animate-pulse">
+                    <span className="absolute top-2 right-2 w-3 h-3 bg-red-600 border-2 border-white rounded-full animate-pulse">
                     </span>
                   )}
                 </button>
                 {notifOpen && <NotificationCenter onClose={() => setNotifOpen(false)} />}
               </div>
               
-              <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+              <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4 border-l border-slate-200">
                 <div className="text-right hidden sm:block">
                   <div className="text-xs font-bold text-slate-900 leading-none">{user.name}</div>
                   <div className="text-[10px] font-bold text-brand-600 uppercase mt-0.5 tracking-tighter">{user.role}</div>
@@ -95,7 +98,7 @@ const AppContent: React.FC = () => {
                 <img 
                   src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} 
                   alt="Profile" 
-                  className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 shadow-sm"
+                  className="w-10 h-10 lg:w-8 lg:h-8 rounded-full bg-slate-100 border border-slate-200 shadow-sm"
                 />
               </div>
             </div>

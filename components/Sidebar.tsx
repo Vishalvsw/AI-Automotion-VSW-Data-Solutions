@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Users, Briefcase, IndianRupee, Settings, LogOut, Megaphone, ShieldCheck, Rocket, Zap, Target, Layers } from 'lucide-react';
+import { LayoutDashboard, Users, Briefcase, IndianRupee, Settings, LogOut, Megaphone, ShieldCheck, Rocket, Zap, Target, Layers, X } from 'lucide-react';
 import { UserRole } from '../types';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -8,9 +8,10 @@ interface SidebarProps {
   role: UserRole;
   onLogout: () => void;
   isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen, setIsOpen }) => {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
 
@@ -55,12 +56,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
   return (
     <aside 
       className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 transform transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col
+        fixed inset-y-0 left-0 z-[100] w-72 bg-white border-r border-slate-100 transform transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col shadow-2xl lg:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:inset-0
       `}
     >
-        <div className="flex items-center h-24 px-10">
+        <div className="flex items-center justify-between h-24 px-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">
               V
@@ -70,6 +71,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
               <span className="text-[10px] font-black text-brand-600 uppercase tracking-[0.2em] mt-1">VSW Enterprise</span>
             </div>
           </div>
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="lg:hidden p-2 text-slate-400 hover:text-slate-900"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
@@ -81,6 +88,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
             <Link 
               key={link.path} 
               to={link.path} 
+              onClick={() => setIsOpen(false)}
               className={linkClasses(isActive(link.path))}
             >
               <link.icon size={20} className={isActive(link.path) ? 'text-brand-400' : 'text-slate-400 group-hover:text-slate-900'} />
@@ -93,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onLogout, isOpen }) => {
               <div className="mt-10 mb-4 px-6 text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
                 Control Tower
               </div>
-              <Link to="/settings" className={linkClasses(isActive('/settings'))}>
+              <Link to="/settings" onClick={() => setIsOpen(false)} className={linkClasses(isActive('/settings'))}>
                 <ShieldCheck size={20} className={isActive('/settings') ? 'text-brand-400' : 'text-slate-400 group-hover:text-slate-900'} />
                 Global Admin
               </Link>

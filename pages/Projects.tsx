@@ -112,41 +112,41 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     <div className="h-full flex flex-col space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Production Intelligence</h1>
-          <p className="text-slate-500 font-medium">Cycle 2026-27 | Global Operations Command</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Production Intelligence</h1>
+          <p className="text-sm text-slate-500 font-medium">Cycle 2026-27 | Global Operations Command</p>
         </div>
-        <div className="flex items-center gap-3">
-           <div className="flex bg-white border border-slate-200 rounded-xl p-1.5 shadow-sm">
-              <button onClick={() => setViewMode('kanban')} className={`p-2.5 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid size={18} /></button>
-              <button onClick={() => setViewMode('ledger')} className={`p-2.5 rounded-lg transition-all ${viewMode === 'ledger' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}><Table size={18} /></button>
+        <div className="flex items-center gap-2 sm:gap-3">
+           <div className="flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+              <button onClick={() => setViewMode('kanban')} className={`p-2 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid size={18} /></button>
+              <button onClick={() => setViewMode('ledger')} className={`p-2 rounded-lg transition-all ${viewMode === 'ledger' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}><Table size={18} /></button>
            </div>
            {(user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE) && (
-             <button className="px-6 py-3.5 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-700 transition-all shadow-xl shadow-brand-100">Deploy New Node</button>
+             <button className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl sm:rounded-2xl hover:bg-brand-700 transition-all shadow-xl shadow-brand-100">Deploy Node</button>
            )}
         </div>
       </div>
 
       {viewMode === 'kanban' ? (
         <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4 no-scrollbar">
-          <div className="flex h-full gap-6 min-w-[1400px]">
+          <div className="flex h-full gap-4 sm:gap-6 min-w-max px-1">
             {columns.map((col) => (
-              <div key={col.id} className="flex-1 flex flex-col h-full min-w-[320px] bg-slate-50/50 rounded-[40px] border border-slate-200 shadow-inner">
-                <div className="p-8 flex justify-between items-center">
-                  <h3 className={`font-black text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm ${col.color}`}>
-                    <col.icon size={14} />
+              <div key={col.id} className="flex-1 flex flex-col h-full w-[280px] sm:w-[320px] bg-slate-50/50 rounded-[32px] sm:rounded-[40px] border border-slate-200 shadow-inner">
+                <div className="p-6 sm:p-8 flex justify-between items-center">
+                  <h3 className={`font-black text-[9px] sm:text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl shadow-sm ${col.color}`}>
+                    <col.icon size={12} />
                     {col.title}
                   </h3>
-                  <span className="text-[10px] font-black text-slate-300">{projects.filter(p => p.status === col.id).length} Nodes</span>
+                  <span className="text-[9px] sm:text-[10px] font-black text-slate-300">{projects.filter(p => p.status === col.id).length} Nodes</span>
                 </div>
-                <div className="flex-1 px-5 pb-6 overflow-y-auto space-y-4 custom-scrollbar">
+                <div className="flex-1 px-4 sm:px-5 pb-6 overflow-y-auto space-y-4 custom-scrollbar">
                   {projects.filter(p => p.status === col.id).map((project) => (
-                    <div key={project.id} onClick={() => setSelectedProject(project)} className={`bg-white p-7 rounded-[32px] border cursor-pointer transition-all hover:-translate-y-2 border-slate-200 shadow-sm hover:shadow-2xl hover:border-brand-300 group`}>
-                        <div className="mb-4">
-                            <span className="text-[9px] font-black tracking-[0.3em] text-slate-400 uppercase">{project.client}</span>
-                            <h4 className="text-sm font-black text-slate-900 mt-1 leading-snug group-hover:text-brand-600 transition-colors">{project.title}</h4>
+                    <div key={project.id} onClick={() => setSelectedProject(project)} className={`bg-white p-5 sm:p-7 rounded-[24px] sm:rounded-[32px] border cursor-pointer transition-all hover:-translate-y-1 border-slate-200 shadow-sm hover:shadow-xl group`}>
+                        <div className="mb-3 sm:mb-4">
+                            <span className="text-[8px] sm:text-[9px] font-black tracking-[0.3em] text-slate-400 uppercase">{project.client}</span>
+                            <h4 className="text-xs sm:text-sm font-black text-slate-900 mt-1 leading-snug group-hover:text-brand-600 transition-colors">{project.title}</h4>
                         </div>
-                        <div className="flex justify-between items-center mb-5">
-                           <span className={`text-[8px] font-black uppercase px-3 py-1.5 rounded-lg border shadow-sm ${
+                        <div className="flex justify-between items-center mb-4 sm:mb-5">
+                           <span className={`text-[7px] sm:text-[8px] font-black uppercase px-2 sm:px-3 py-1 rounded-lg border shadow-sm ${
                              project.quoteStatus === QuoteStatus.APPROVED ? 'bg-green-50 text-green-600 border-green-100' : 
                              project.quoteStatus === QuoteStatus.SENT ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'
                            }`}>
@@ -154,13 +154,13 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                            </span>
                            <div className="flex -space-x-1">
                               {Object.values(project.techMilestones).map((v, i) => (
-                                <div key={i} className={`w-3 h-1.5 rounded-full ${v ? 'bg-green-500' : 'bg-slate-100'}`}></div>
+                                <div key={i} className={`w-2 h-1 sm:w-3 sm:h-1.5 rounded-full ${v ? 'bg-green-500' : 'bg-slate-100'}`}></div>
                               ))}
                            </div>
                         </div>
-                        <div className="flex items-center justify-between pt-5 border-t border-slate-50">
-                            <div className="text-[11px] font-black text-slate-900">{formatINR(project.financials.total)}</div>
-                            <div className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase ${project.financials.balance < 0 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
+                        <div className="flex items-center justify-between pt-4 sm:pt-5 border-t border-slate-50">
+                            <div className="text-[10px] sm:text-[11px] font-black text-slate-900">{formatINR(project.financials.total)}</div>
+                            <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase ${project.financials.balance < 0 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
                                {project.financials.balance === 0 ? 'Settled' : `Bal: ${formatINR(Math.abs(project.financials.balance))}`}
                             </div>
                         </div>
@@ -172,12 +172,12 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 bg-white border border-slate-200 rounded-[40px] shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 bg-white border border-slate-200 rounded-[32px] sm:rounded-[40px] shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto custom-scrollbar h-full">
-            <table className="w-full text-sm text-left border-collapse">
+            <table className="w-full text-sm text-left border-collapse min-w-[1000px]">
               <thead className="bg-slate-900 text-white text-[9px] font-black uppercase tracking-[0.3em] sticky top-0 z-20">
                 <tr>
-                  <th className="px-10 py-6 border-r border-slate-800">Project / Operational Node</th>
+                  <th className="px-8 sm:px-10 py-5 sm:py-6 border-r border-slate-800">Project / Operational Node</th>
                   <th className="px-6 py-6 border-r border-slate-800 text-center">Grand Total</th>
                   <th className="px-6 py-6 border-r border-slate-800 text-center bg-brand-600">Ar Balance</th>
                   <th className="px-6 py-6 border-r border-slate-800 text-center">Quotation Hub</th>
@@ -192,7 +192,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                    const currentQuoteStatus = p.quoteStatus || matchingLead?.quoteStatus || QuoteStatus.DRAFT;
                    return (
                     <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
-                      <td onClick={() => setSelectedProject(p)} className="px-10 py-6 border-r border-slate-50 cursor-pointer">
+                      <td onClick={() => setSelectedProject(p)} className="px-8 sm:px-10 py-5 sm:py-6 border-r border-slate-50 cursor-pointer">
                          <div className="font-black text-slate-900 text-xs group-hover:text-brand-600 transition-colors">{p.client}</div>
                          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{p.title}</div>
                       </td>
@@ -236,29 +236,29 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
 
       {/* PROJECT DETAIL SLIDEOVER */}
       {selectedProject && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-end bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-end bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
            <div className="w-full max-w-xl h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
-              <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                 <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 bg-slate-900 text-white rounded-[24px] flex items-center justify-center font-black text-2xl shadow-xl">{selectedProject.client.charAt(0)}</div>
+              <div className="p-6 sm:p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                 <div className="flex items-center gap-4 sm:gap-5">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-900 text-white rounded-[20px] sm:rounded-[24px] flex items-center justify-center font-black text-xl sm:text-2xl shadow-xl">{selectedProject.client.charAt(0)}</div>
                     <div>
-                       <h2 className="text-2xl font-black text-slate-900 tracking-tight">{selectedProject.client}</h2>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Operational ID: {selectedProject.id}</p>
+                       <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{selectedProject.client}</h2>
+                       <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Node: {selectedProject.id.slice(-8)}</p>
                     </div>
                  </div>
-                 <button onClick={() => setSelectedProject(null)} className="p-4 bg-white hover:bg-slate-100 rounded-2xl shadow-sm transition-all text-slate-400 hover:text-slate-900 border border-slate-100"><X size={24}/></button>
+                 <button onClick={() => setSelectedProject(null)} className="p-3 sm:p-4 bg-white hover:bg-slate-100 rounded-xl sm:rounded-2xl shadow-sm transition-all text-slate-400 hover:text-slate-900 border border-slate-100"><X size={20}/></button>
               </div>
-              <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8 sm:space-y-12 custom-scrollbar">
                  <div className="space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-3"><IndianRupee size={20} className="text-brand-600" /> Operational Financials</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div className="p-5 sm:p-6 bg-slate-50 rounded-2xl sm:rounded-3xl border border-slate-100">
                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Grand Total</label>
-                          <input disabled={!canEditFinance} type="number" className="w-full bg-transparent border-none p-0 font-black text-xl outline-none text-slate-900" value={selectedProject.financials.total} onChange={(e) => handleUpdateFinancials(selectedProject.id, 'total', Number(e.target.value))} />
+                          <input disabled={!canEditFinance} type="number" className="w-full bg-transparent border-none p-0 font-black text-lg sm:text-xl outline-none text-slate-900" value={selectedProject.financials.total} onChange={(e) => handleUpdateFinancials(selectedProject.id, 'total', Number(e.target.value))} />
                        </div>
-                       <div className="p-6 bg-green-50 rounded-3xl border border-green-100">
+                       <div className="p-5 sm:p-6 bg-green-50 rounded-2xl sm:rounded-3xl border border-green-100">
                           <label className="text-[9px] font-black text-green-400 uppercase tracking-widest block mb-2">Advance Settled</label>
-                          <input disabled={!canEditFinance} type="number" className="w-full bg-transparent border-none p-0 font-black text-xl outline-none text-green-700" value={selectedProject.financials.advance} onChange={(e) => handleUpdateFinancials(selectedProject.id, 'advance', Number(e.target.value))} />
+                          <input disabled={!canEditFinance} type="number" className="w-full bg-transparent border-none p-0 font-black text-lg sm:text-xl outline-none text-green-700" value={selectedProject.financials.advance} onChange={(e) => handleUpdateFinancials(selectedProject.id, 'advance', Number(e.target.value))} />
                        </div>
                     </div>
                  </div>
@@ -270,34 +270,28 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     {canManageNodes && (
                       <div className="space-y-3">
                         <div className="relative group">
-                          <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none">
-                              <Plus size={18} className="text-slate-300" />
-                              {newTaskTitle && smartAssignment !== 'Unassigned' && (
-                                <div className="bg-brand-50 text-brand-600 px-3 py-1 rounded-xl text-[9px] font-black uppercase flex items-center gap-1.5 animate-in zoom-in shadow-sm border border-brand-100">
-                                  <Sparkles size={12} /> {smartAssignment}
-                                </div>
-                              )}
+                          <div className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3 pointer-events-none">
+                              <Plus size={16} className="text-slate-300" />
                           </div>
-                          <input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full pl-36 pr-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-3xl text-sm font-bold outline-none focus:bg-white focus:border-brand-500 transition-all shadow-inner" placeholder="Inject task to production..." />
+                          <input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full pl-12 pr-6 py-4 sm:py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl sm:rounded-3xl text-sm font-bold outline-none focus:bg-white focus:border-brand-500 transition-all shadow-inner" placeholder="Inject task node..." />
                         </div>
-                        <button onClick={() => handleAddTask(selectedProject.id)} disabled={!newTaskTitle.trim()} className="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase rounded-[24px] transition-all hover:bg-slate-800 disabled:opacity-50 shadow-xl shadow-slate-200">Deploy Task Node</button>
+                        <button onClick={() => handleAddTask(selectedProject.id)} disabled={!newTaskTitle.trim()} className="w-full py-4 sm:py-5 bg-slate-900 text-white text-[10px] sm:text-[11px] font-black uppercase rounded-xl sm:rounded-[24px] transition-all hover:bg-slate-800 disabled:opacity-50 shadow-xl shadow-slate-200">Deploy Task Node</button>
                       </div>
                     )}
                     <div className="space-y-3">
                        {selectedProject.tasks.map((task) => (
-                           <div key={task.id} className="p-5 bg-white border border-slate-100 rounded-3xl flex flex-col gap-4 shadow-sm hover:shadow-md transition-all">
-                              <div className="flex items-center justify-between">
+                           <div key={task.id} className="p-4 sm:p-5 bg-white border border-slate-100 rounded-2xl sm:rounded-3xl flex flex-col gap-3 sm:gap-4 shadow-sm hover:shadow-md transition-all">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                  <div>
                                     <div className="text-sm font-black text-slate-900">{task.title}</div>
                                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-1">{task.assignee}</div>
                                  </div>
                                  <div className="flex items-center gap-2">
-                                    {/* Priority Select */}
-                                    <div className="relative group/sel">
+                                    <div className="relative flex-1 sm:flex-none">
                                        <select 
                                           value={task.priority} 
                                           onChange={(e) => handleUpdateTaskPriority(selectedProject.id, task.id, e.target.value as TaskPriority)} 
-                                          className={`pl-3 pr-8 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border border-transparent outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer transition-all appearance-none ${getPriorityColor(task.priority)}`}
+                                          className={`w-full sm:w-auto pl-3 pr-8 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border border-transparent outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer transition-all appearance-none ${getPriorityColor(task.priority)}`}
                                        >
                                           <option value="High">High</option>
                                           <option value="Medium">Medium</option>
@@ -306,12 +300,11 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                                        <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50" />
                                     </div>
                                     
-                                    {/* Status Select */}
-                                    <div className="relative group/sel">
+                                    <div className="relative flex-1 sm:flex-none">
                                        <select 
                                           value={task.status} 
                                           onChange={(e) => handleUpdateTaskStatus(selectedProject.id, task.id, e.target.value as TaskStatus)} 
-                                          className="pl-3 pr-8 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border-none outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors appearance-none"
+                                          className="w-full sm:w-auto pl-3 pr-8 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border-none outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors appearance-none"
                                        >
                                           {Object.values(TaskStatus).map(s => <option key={s} value={s}>{s}</option>)}
                                        </select>
@@ -324,7 +317,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     </div>
                  </div>
               </div>
-              <div className="p-10 border-t border-slate-100 bg-white flex gap-4"><button onClick={() => setSelectedProject(null)} className="flex-1 py-5 border-2 border-slate-100 text-slate-500 font-black rounded-[32px] text-xs uppercase tracking-[0.2em] hover:bg-slate-50 transition-all">Terminate View</button></div>
+              <div className="p-6 sm:p-10 border-t border-slate-100 bg-white flex gap-4"><button onClick={() => setSelectedProject(null)} className="flex-1 py-4 sm:py-5 border-2 border-slate-100 text-slate-500 font-black rounded-2xl sm:rounded-[32px] text-xs uppercase tracking-[0.2em] hover:bg-slate-50 transition-all">Terminate View</button></div>
            </div>
         </div>
       )}

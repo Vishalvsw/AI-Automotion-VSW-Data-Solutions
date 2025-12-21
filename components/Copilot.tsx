@@ -173,18 +173,18 @@ export default function Copilot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[1000] flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 lg:bottom-6 lg:right-6 z-[1000] flex flex-col items-end">
       {isOpen && (
-        <div className="w-[420px] h-[650px] bg-white rounded-[40px] shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-500 mb-4">
-          <div className="p-8 bg-slate-900 text-white flex justify-between items-center relative overflow-hidden">
+        <div className="w-[calc(100vw-2rem)] sm:w-[420px] h-[70vh] sm:h-[650px] bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-500 mb-4">
+          <div className="p-6 sm:p-8 bg-slate-900 text-white flex justify-between items-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/20 blur-[60px] rounded-full"></div>
             <div className="flex items-center gap-4 relative z-10">
-              <div className="w-12 h-12 bg-brand-600 rounded-2xl flex items-center justify-center shadow-2xl">
-                <Zap size={24} className={isVoiceMode ? 'animate-bounce' : 'animate-pulse'} />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-brand-600 rounded-2xl flex items-center justify-center shadow-2xl">
+                <Zap size={20} className={isVoiceMode ? 'animate-bounce' : 'animate-pulse'} />
               </div>
               <div>
-                <h3 className="text-lg font-black uppercase tracking-tight">AI Strategist</h3>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <h3 className="text-base sm:text-lg font-black uppercase tracking-tight">AI Strategist</h3>
+                <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   {isVoiceMode ? 'Live Voice Active' : 'Neural Link Ready'}
                 </span>
               </div>
@@ -192,18 +192,18 @@ export default function Copilot() {
             <div className="flex items-center gap-2 relative z-10">
                <button 
                 onClick={isVoiceMode ? stopVoiceMode : startVoiceMode}
-                className={`p-3 rounded-2xl transition-all ${isVoiceMode ? 'bg-red-600 text-white animate-pulse' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                className={`p-2.5 sm:p-3 rounded-2xl transition-all ${isVoiceMode ? 'bg-red-600 text-white animate-pulse' : 'bg-white/10 text-white hover:bg-white/20'}`}
                >
-                 {isVoiceMode ? <MicOff size={18} /> : <Mic size={18} />}
+                 {isVoiceMode ? <MicOff size={16} /> : <Mic size={16} />}
                </button>
-               <button onClick={() => setIsOpen(false)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl"><ChevronDown size={20}/></button>
+               <button onClick={() => setIsOpen(false)} className="p-2.5 sm:p-3 bg-white/10 hover:bg-white/20 rounded-2xl"><ChevronDown size={18}/></button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-slate-50/50 custom-scrollbar">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in duration-300`}>
-                <div className={`max-w-[85%] p-5 rounded-3xl text-sm font-semibold leading-relaxed shadow-sm ${
+                <div className={`max-w-[85%] p-4 sm:p-5 rounded-3xl text-sm font-semibold leading-relaxed shadow-sm ${
                   m.role === 'user' ? 'bg-slate-900 text-white rounded-tr-none' : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
                 }`}>
                   {m.text}
@@ -211,12 +211,12 @@ export default function Copilot() {
               </div>
             ))}
             {isLoading && (
-              <div className="flex justify-start"><div className="bg-white p-5 rounded-3xl border border-slate-100 animate-pulse"><Loader2 className="animate-spin text-brand-600" size={20} /></div></div>
+              <div className="flex justify-start"><div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-100 animate-pulse"><Loader2 className="animate-spin text-brand-600" size={18} /></div></div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-6 bg-white border-t border-slate-100">
+          <div className="p-4 sm:p-6 bg-white border-t border-slate-100">
              <div className="relative">
                 <input 
                   value={input}
@@ -224,11 +224,11 @@ export default function Copilot() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder={isVoiceMode ? "Voice mode active..." : "Query the pipeline..."}
                   disabled={isVoiceMode}
-                  className="w-full pl-6 pr-14 py-5 bg-slate-50 border-2 border-transparent rounded-[32px] text-sm font-bold outline-none focus:bg-white focus:border-brand-500 transition-all shadow-inner disabled:opacity-50"
+                  className="w-full pl-5 pr-12 py-4 sm:py-5 bg-slate-50 border-2 border-transparent rounded-[24px] sm:rounded-[32px] text-sm font-bold outline-none focus:bg-white focus:border-brand-500 transition-all shadow-inner disabled:opacity-50"
                 />
                 {!isVoiceMode && (
-                  <button onClick={handleSend} disabled={!input.trim() || isLoading} className={`absolute right-2 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all ${input.trim() ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-300'}`}>
-                    <Send size={18} />
+                  <button onClick={handleSend} disabled={!input.trim() || isLoading} className={`absolute right-2 top-1/2 -translate-y-1/2 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all ${input.trim() ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-300'}`}>
+                    <Send size={16} />
                   </button>
                 )}
              </div>
@@ -236,8 +236,8 @@ export default function Copilot() {
         </div>
       )}
 
-      <button onClick={() => setIsOpen(!isOpen)} className={`w-16 h-16 rounded-[24px] flex items-center justify-center shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 group ${isOpen ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'}`}>
-        {isOpen ? <ChevronDown size={32} /> : <Zap size={32} />}
+      <button onClick={() => setIsOpen(!isOpen)} className={`w-14 h-14 sm:w-16 sm:h-16 rounded-[20px] sm:rounded-[24px] flex items-center justify-center shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 group ${isOpen ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'}`}>
+        {isOpen ? <ChevronDown size={28} /> : <Zap size={28} />}
       </button>
     </div>
   );
