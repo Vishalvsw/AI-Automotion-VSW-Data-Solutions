@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole } from '../types';
-import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock } from 'lucide-react';
+import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole, TaskStatus } from '../types';
+import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface ProjectsProps {
@@ -56,6 +56,21 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     updateProject(id, { financials: newFinancials });
     if (selectedProject?.id === id) {
       setSelectedProject({ ...selectedProject, financials: newFinancials });
+    }
+  };
+
+  const handleUpdateTaskStatus = (projectId: string, taskId: string, newStatus: TaskStatus) => {
+    if (!isAdmin) return;
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    
+    const updatedTasks = project.tasks.map(t => 
+      t.id === taskId ? { ...t, status: newStatus } : t
+    );
+    
+    updateProject(projectId, { tasks: updatedTasks });
+    if (selectedProject?.id === projectId) {
+      setSelectedProject({ ...selectedProject, tasks: updatedTasks });
     }
   };
 
@@ -246,6 +261,57 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                            <p className="text-[10px] font-black uppercase opacity-60">Total Collected</p>
                            <h4 className="text-xl font-bold">{formatINR(selectedProject.financials.totalPaid)}</h4>
                         </div>
+                    </div>
+                 </div>
+
+                 {/* TASK MANAGEMENT SECTION */}
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><ListTodo size={18} className="text-brand-600" /> Milestone Tasks</h3>
+                    <div className="space-y-3">
+                       {selectedProject.tasks.length > 0 ? selectedProject.tasks.map((task) => (
+                         <div key={task.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between group hover:bg-white hover:shadow-sm transition-all">
+                            <div className="flex-1">
+                               <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-black text-slate-900">{task.title}</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                                    task.priority === 'High' ? 'bg-red-100 text-red-600' : 'bg-slate-200 text-slate-600'
+                                  }`}>
+                                    {task.priority}
+                                  </span>
+                               </div>
+                               <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Assignee: {task.assignee}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                               {isAdmin ? (
+                                 <select 
+                                   value={task.status}
+                                   onChange={(e) => handleUpdateTaskStatus(selectedProject.id, task.id, e.target.value as TaskStatus)}
+                                   className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-none outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer ${
+                                     task.status === TaskStatus.DONE ? 'bg-green-100 text-green-700' :
+                                     task.status === TaskStatus.BLOCKED ? 'bg-red-100 text-red-700' :
+                                     task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-100 text-blue-700' :
+                                     'bg-slate-200 text-slate-600'
+                                   }`}
+                                 >
+                                    {Object.values(TaskStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                                 </select>
+                               ) : (
+                                 <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                                   task.status === TaskStatus.DONE ? 'bg-green-100 text-green-700' :
+                                   task.status === TaskStatus.BLOCKED ? 'bg-red-100 text-red-700' :
+                                   task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-100 text-blue-700' :
+                                   'bg-slate-200 text-slate-600'
+                                 }`}>
+                                    {task.status}
+                                 </span>
+                               )}
+                            </div>
+                         </div>
+                       )) : (
+                         <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Strategic Tasks Defined</p>
+                         </div>
+                       )}
                     </div>
                  </div>
 

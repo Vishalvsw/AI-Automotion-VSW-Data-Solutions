@@ -123,6 +123,13 @@ export enum ProjectStatus {
   DROPPED = 'Dropped'
 }
 
+export enum TaskStatus {
+  TODO = 'To Do',
+  IN_PROGRESS = 'In Progress',
+  BLOCKED = 'Blocked',
+  DONE = 'Done'
+}
+
 export interface ProjectFinancials {
   basePrice: number;
   total: number;
@@ -153,7 +160,7 @@ export interface Project {
   progress: number;
   financials: ProjectFinancials;
   techMilestones: TechMilestones;
-  tasks: { id: string; title: string; assignee: string; priority: string }[];
+  tasks: { id: string; title: string; assignee: string; priority: string; status: TaskStatus }[];
 }
 
 export interface Invoice {

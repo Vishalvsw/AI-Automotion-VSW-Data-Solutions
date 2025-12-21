@@ -1,5 +1,5 @@
 
-import { Lead, LeadStatus, Project, ProjectStatus, Invoice, UserRole, User, MarketingCampaign, LeadSource } from '../types';
+import { Lead, LeadStatus, Project, ProjectStatus, TaskStatus, Invoice, UserRole, User, MarketingCampaign, LeadSource } from '../types';
 
 const getDate = (diffDays: number) => {
   const date = new Date();
@@ -28,7 +28,10 @@ export const MOCK_PROJECTS: Project[] = [
     progress: 15, 
     financials: { basePrice: 15000, total: 18000, advance: 3000, stage1: 0, stage2: 0, stage3: 0, totalPaid: 3000, balance: -15000 },
     techMilestones: { demo: true, frontend: false, backend: false, deployment: false, domain: false, api: false },
-    tasks: [] 
+    tasks: [
+      { id: 't1', title: 'Database Schema Design', assignee: 'Vishal', priority: 'High', status: TaskStatus.DONE },
+      { id: 't2', title: 'Attendance Module UI', assignee: 'Dev', priority: 'Medium', status: TaskStatus.IN_PROGRESS }
+    ] 
   },
   { 
     id: 'p2', 
@@ -40,7 +43,10 @@ export const MOCK_PROJECTS: Project[] = [
     progress: 40, 
     financials: { basePrice: 122000, total: 122000, advance: 24600, stage1: 25000, stage2: 0, stage3: 0, totalPaid: 49600, balance: -72400 },
     techMilestones: { demo: true, frontend: true, backend: true, deployment: false, domain: false, api: false },
-    tasks: [] 
+    tasks: [
+      { id: 't3', title: 'Vendor Dashboard API', assignee: 'Vishal', priority: 'High', status: TaskStatus.DONE },
+      { id: 't4', title: 'Payment Gateway Integration', assignee: 'Vishal', priority: 'High', status: TaskStatus.IN_PROGRESS }
+    ] 
   },
   { 
     id: 'p3', 
@@ -52,7 +58,9 @@ export const MOCK_PROJECTS: Project[] = [
     progress: 5, 
     financials: { basePrice: 160000, total: 160000, advance: 0, stage1: 0, stage2: 0, stage3: 0, totalPaid: 0, balance: -160000 },
     techMilestones: { demo: false, frontend: false, backend: false, deployment: false, domain: false, api: false },
-    tasks: [] 
+    tasks: [
+      { id: 't5', title: 'Requirement Gathering', assignee: 'Vishal', priority: 'High', status: TaskStatus.IN_PROGRESS }
+    ] 
   },
   { 
     id: 'p4', 
@@ -64,7 +72,9 @@ export const MOCK_PROJECTS: Project[] = [
     progress: 95, 
     financials: { basePrice: 22000, total: 22000, advance: 0, stage1: 0, stage2: 0, stage3: 0, totalPaid: 0, balance: -22000 },
     techMilestones: { demo: true, frontend: true, backend: true, deployment: true, domain: true, api: true },
-    tasks: [] 
+    tasks: [
+      { id: 't6', title: 'Final Handover Documentation', assignee: 'Vishal', priority: 'Medium', status: TaskStatus.TODO }
+    ] 
   },
   { 
     id: 'p5', 
