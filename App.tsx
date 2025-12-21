@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Marketing from './pages/Marketing';
 import Retention from './pages/Retention';
 import Settings from './pages/Settings';
+import Copilot from './components/Copilot'; // Import Copilot
 import { User, UserRole } from './types';
 import { Menu, Bell, Search } from 'lucide-react';
 import { AppProvider } from './context/AppContext';
@@ -35,7 +36,7 @@ const AppContent: React.FC = () => {
 
   return (
     <Router>
-      <div className="flex h-screen bg-slate-50 overflow-hidden">
+      <div className="flex h-screen bg-slate-50 overflow-hidden relative">
         <div 
           className={`fixed inset-0 bg-gray-900/50 z-40 lg:hidden transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
           onClick={() => setSidebarOpen(false)}
@@ -99,6 +100,9 @@ const AppContent: React.FC = () => {
             </div>
           </main>
         </div>
+        
+        {/* Global AI Copilot */}
+        <Copilot user={user} />
       </div>
     </Router>
   );

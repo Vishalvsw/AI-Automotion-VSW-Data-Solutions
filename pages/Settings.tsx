@@ -1,8 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { MOCK_USERS } from '../services/mockData';
 import { UserRole, User, QuotationModule } from '../types';
-import { Shield, User as UserIcon, CheckSquare, Bell, Lock, UserPlus, CheckCircle, XCircle, X, Trash2, Tag, Plus, Edit2, IndianRupee } from 'lucide-react';
+import { 
+  Shield, User as UserIcon, CheckSquare, Bell, Lock, 
+  UserPlus, CheckCircle, XCircle, X, Trash2, Tag, 
+  Plus, Edit2, IndianRupee, LayoutGrid, List, 
+  TrendingUp, BarChart3, Database, Coins, ArrowUpRight
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface SettingsProps {
@@ -18,12 +23,29 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<QuotationModule | null>(null);
+  const [libraryView, setLibraryView] = useState<'grid' | 'ledger'>('grid');
   
   const [approvals, setApprovals] = useState([
     { id: 1, type: 'Invoice Approval', desc: 'Approve Invoice #INV-2024-002 for ₹12,50,000', requester: 'Karan (Finance)', status: 'Pending' },
     { id: 2, type: 'New Hire', desc: 'Approve Hiring of Sr. React Developer', requester: 'Priya (HR)', status: 'Pending' },
     { id: 3, type: 'Project Budget', desc: 'Increase budget for Food Delivery App by 10%', requester: 'Rahul (PM)', status: 'Pending' },
   ]);
+
+  const catalogStats = useMemo(() => {
+    const total = modules.reduce((acc, m) => acc + m.price, 0);
+    const avg = modules.length > 0 ? total / modules.length : 0;
+    return {
+      count: modules.length,
+      avgValue: avg,
+      suiteValue: total
+    };
+  }, [modules]);
+
+  const formatINR = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency', currency: 'INR', maximumFractionDigits: 0
+    }).format(amount);
+  };
 
   const handleApprove = (id: number) => {
     if (!isAdmin) return;
@@ -85,80 +107,75 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
     setEditingModule(null);
   };
 
-  const formatINR = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency', currency: 'INR', maximumFractionDigits: 0
-    }).format(amount);
-  };
-
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-8 pb-20">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Settings & Admin</h1>
-          <p className="text-slate-500">Manage users, library of solution modules, and system approvals.</p>
+          <div className="flex items-center gap-2 mb-1">
+             <Shield size={20} className="text-brand-600" />
+             <h1 className="text-3xl font-black text-slate-900 tracking-tight">System Infrastructure</h1>
+          </div>
+          <p className="text-slate-500 font-medium">Global governance, pricing strategy, and team orchestration.</p>
         </div>
         {!isAdmin && (
            <div className="bg-amber-50 text-amber-700 px-4 py-2 rounded-xl border border-amber-100 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-             <Lock size={14} /> View Only Mode
+             <Lock size={14} /> Intelligence Restricted
            </div>
         )}
       </div>
 
-      <div className="flex border-b border-slate-200 space-x-6">
-        <button 
-          onClick={() => setActiveTab('users')}
-          className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'users' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-        >
-          User Access
-        </button>
-        <button 
-          onClick={() => setActiveTab('library')}
-          className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'library' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-        >
-          Price Library
-        </button>
-        {isAdmin && (
-          <button 
-            onClick={() => setActiveTab('approvals')}
-            className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'approvals' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-          >
-            Approvals
-            {approvals.filter(a => a.status === 'Pending').length > 0 && (
-               <span className="ml-2 bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
-                 {approvals.filter(a => a.status === 'Pending').length}
-               </span>
-            )}
-          </button>
-        )}
+      <div className="flex border-b border-slate-200 space-x-8">
+        {[
+          { id: 'users', label: 'Identity & Access' },
+          { id: 'library', label: 'Solution Strategy' },
+          { id: 'approvals', label: 'Governance Queue' }
+        ].map((tab) => (
+          (tab.id !== 'approvals' || isAdmin) && (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`pb-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === tab.id ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+            >
+              {tab.label}
+              {tab.id === 'approvals' && approvals.filter(a => a.status === 'Pending').length > 0 && (
+                <span className="ml-2 bg-red-600 text-white px-2 py-0.5 rounded-full text-[10px] font-black animate-pulse">
+                  {approvals.filter(a => a.status === 'Pending').length}
+                </span>
+              )}
+            </button>
+          )
+        ))}
       </div>
 
       {activeTab === 'users' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="font-bold text-slate-700">Team Members</h3>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+          <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-8 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Active Operatives</h3>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">Authorized system users and their permission tiers.</p>
+              </div>
               {isAdmin && (
-                <button onClick={() => setIsInviteModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-xs font-bold rounded-xl hover:bg-brand-700 transition-all shadow-lg shadow-brand-100">
-                  <UserPlus size={14} />
-                  Invite User
+                <button onClick={() => setIsInviteModalOpen(true)} className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200">
+                  <UserPlus size={16} />
+                  Provision Operative
                 </button>
               )}
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-50">
               {users.map(u => (
-                <div key={u.id} className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img src={u.avatarUrl} alt={u.name} className="w-10 h-10 rounded-full bg-slate-100" />
+                <div key={u.id} className="p-6 flex items-center justify-between group hover:bg-slate-50/50 transition-colors">
+                  <div className="flex items-center gap-5">
+                    <img src={u.avatarUrl} alt={u.name} className="w-12 h-12 rounded-2xl bg-slate-100 shadow-sm object-cover" />
                     <div>
-                      <div className="font-bold text-slate-900">{u.name}</div>
-                      <div className="text-xs text-slate-500">{u.email}</div>
+                      <div className="font-black text-slate-900">{u.name}</div>
+                      <div className="text-[11px] text-slate-400 font-bold uppercase tracking-tight">{u.email}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                        <select 
                          disabled={!isAdmin}
-                         className="text-xs font-bold border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600 bg-white focus:ring-2 focus:ring-brand-500 outline-none disabled:bg-slate-100 disabled:cursor-not-allowed" 
+                         className="text-[10px] font-black uppercase tracking-widest border border-slate-200 rounded-xl px-4 py-2.5 text-slate-600 bg-white focus:ring-2 focus:ring-brand-500 outline-none disabled:bg-slate-100 disabled:cursor-not-allowed appearance-none" 
                          value={u.role}
                          onChange={(e) => handleRoleChange(u.id, e.target.value as UserRole)}
                        >
@@ -167,8 +184,8 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
                           ))}
                       </select>
                     {isAdmin && (
-                      <button onClick={() => handleRemoveUser(u.id)} className="text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 size={16} />
+                      <button onClick={() => handleRemoveUser(u.id)} className="text-slate-300 hover:text-red-600 p-3 hover:bg-red-50 rounded-2xl transition-all">
+                        <Trash2 size={18} />
                       </button>
                     )}
                   </div>
@@ -180,73 +197,145 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
       )}
 
       {activeTab === 'library' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-bold text-slate-900">Module Library</h3>
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+          {/* Catalog Intelligence Bar */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm">
+                <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">
+                  <BarChart3 size={14} className="text-brand-500" /> Catalog Depth
+                </div>
+                <div className="text-2xl font-black text-slate-900">{catalogStats.count} Solutions</div>
+             </div>
+             <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm">
+                <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">
+                  <TrendingUp size={14} className="text-green-500" /> Avg Unit Price
+                </div>
+                <div className="text-2xl font-black text-slate-900">{formatINR(catalogStats.avgValue)}</div>
+             </div>
+             <div className="p-6 bg-slate-900 text-white rounded-3xl shadow-xl shadow-slate-200 border border-slate-800 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                   <Coins size={60} />
+                </div>
+                <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 relative z-10">
+                  <Coins size={14} className="text-brand-400" /> Full Suite Value
+                </div>
+                <div className="text-2xl font-black relative z-10">{formatINR(catalogStats.suiteValue)}</div>
+             </div>
+          </div>
+
+          <div className="flex justify-between items-center bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex items-center gap-3">
+               <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest ml-4">Module Repository</h3>
+               <div className="flex bg-slate-100 p-1 rounded-xl">
+                 <button onClick={() => setLibraryView('grid')} className={`p-1.5 rounded-lg transition-all ${libraryView === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}><LayoutGrid size={16} /></button>
+                 <button onClick={() => setLibraryView('ledger')} className={`p-1.5 rounded-lg transition-all ${libraryView === 'ledger' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}><List size={16} /></button>
+               </div>
+            </div>
             {isAdmin && (
               <button 
                 onClick={() => { setEditingModule(null); setIsModuleModalOpen(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+                className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-700 transition-all shadow-xl shadow-brand-100"
               >
-                <Plus size={16} /> Add Module
+                <Plus size={16} /> Define Solution
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {modules.map(module => (
-              <div key={module.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-start group hover:border-brand-300 transition-all">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Tag size={14} className="text-brand-500" />
-                    <h4 className="font-black text-slate-900">{module.name}</h4>
+          {libraryView === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {modules.map(module => (
+                <div key={module.id} className="bg-white p-7 rounded-[32px] border border-slate-100 shadow-sm flex justify-between items-start group hover:border-brand-200 hover:shadow-xl hover:shadow-slate-100 transition-all">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-brand-50 text-brand-600 rounded-xl">
+                         {module.name.toLowerCase().includes('auth') ? <Shield size={16} /> : 
+                          module.name.toLowerCase().includes('bi') || module.name.toLowerCase().includes('analytics') ? <BarChart3 size={16} /> :
+                          module.name.toLowerCase().includes('storage') || module.name.toLowerCase().includes('data') ? <Database size={16} /> :
+                          <Tag size={16} />}
+                      </div>
+                      <h4 className="font-black text-slate-900 text-base">{module.name}</h4>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-[240px]">{module.description}</p>
+                    <div className="flex items-baseline gap-2 pt-2">
+                       <span className="text-2xl font-black text-brand-600">{formatINR(module.price)}</span>
+                       <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Base Rate</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-400 font-medium">{module.description}</p>
-                  <div className="text-lg font-black text-brand-600 pt-2">{formatINR(module.price)}</div>
+                  {isAdmin && (
+                    <div className="flex gap-1">
+                      <button 
+                        onClick={() => { setEditingModule(module); setIsModuleModalOpen(true); }}
+                        className="p-3 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-2xl transition-all"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button 
+                        onClick={() => deleteModule(module.id)}
+                        className="p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {isAdmin && (
-                  <div className="flex gap-1">
-                    <button 
-                      onClick={() => { setEditingModule(module); setIsModuleModalOpen(true); }}
-                      className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-all"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button 
-                      onClick={() => deleteModule(module.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white border border-slate-100 rounded-[32px] shadow-sm overflow-hidden">
+               <table className="w-full text-left border-collapse">
+                  <thead>
+                     <tr className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
+                        <th className="px-8 py-5">Solution Module</th>
+                        <th className="px-8 py-5 text-right">Unit Price (₹)</th>
+                        <th className="px-8 py-5 text-right">Actions</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                     {modules.map(module => (
+                        <tr key={module.id} className="hover:bg-slate-50/50 transition-colors group">
+                           <td className="px-8 py-5">
+                              <div className="font-black text-slate-900">{module.name}</div>
+                              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{module.description}</div>
+                           </td>
+                           <td className="px-8 py-5 text-right">
+                              <span className="text-sm font-black text-brand-600">{formatINR(module.price)}</span>
+                           </td>
+                           <td className="px-8 py-5 text-right flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => { setEditingModule(module); setIsModuleModalOpen(true); }} className="p-2 text-slate-400 hover:text-brand-600 rounded-lg"><Edit2 size={16} /></button>
+                              <button onClick={() => deleteModule(module.id)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg"><Trash2 size={16} /></button>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+          )}
         </div>
       )}
 
       {activeTab === 'approvals' && isAdmin && (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
            {approvals.map(approval => (
-              <div key={approval.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                 <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-xl ${approval.status === 'Pending' ? 'bg-orange-100 text-orange-600' : approval.status === 'Approved' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+              <div key={approval.id} className="bg-white p-7 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between group hover:border-brand-200 transition-all">
+                 <div className="flex items-start gap-5">
+                    <div className={`p-4 rounded-2xl shadow-sm ${approval.status === 'Pending' ? 'bg-orange-50 text-orange-600' : approval.status === 'Approved' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                        {approval.status === 'Pending' ? <Bell size={24} /> : approval.status === 'Approved' ? <CheckCircle size={24} /> : <XCircle size={24} />}
                     </div>
                     <div>
-                       <h4 className="font-bold text-slate-900">{approval.type}</h4>
-                       <p className="text-sm text-slate-600 mb-1">{approval.desc}</p>
-                       <p className="text-xs text-slate-400">Requested by: {approval.requester}</p>
+                       <h4 className="font-black text-slate-900 uppercase text-xs tracking-widest">{approval.type}</h4>
+                       <p className="text-sm text-slate-600 font-bold mt-1">{approval.desc}</p>
+                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2 flex items-center gap-2">
+                          <UserIcon size={12} /> {approval.requester}
+                       </p>
                     </div>
                  </div>
                  {approval.status === 'Pending' ? (
-                   <div className="flex gap-2">
-                      <button onClick={() => handleReject(approval.id)} className="px-4 py-2 border border-slate-200 text-slate-600 font-bold text-sm rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200">Reject</button>
-                      <button onClick={() => handleApprove(approval.id)} className="px-4 py-2 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800 shadow-lg shadow-slate-200">Approve</button>
+                   <div className="flex gap-3">
+                      <button onClick={() => handleReject(approval.id)} className="px-6 py-3 border border-slate-200 text-slate-500 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all">Reject</button>
+                      <button onClick={() => handleApprove(approval.id)} className="px-6 py-3 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all">Authorize</button>
                    </div>
                  ) : (
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${approval.status === 'Approved' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                    <span className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] border shadow-sm ${approval.status === 'Approved' ? 'bg-green-600 text-white border-green-600' : 'bg-red-600 text-white border-red-600'}`}>
                        {approval.status}
                     </span>
                  )}
@@ -257,31 +346,37 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
 
       {/* MODULE MODAL */}
       {isModuleModalOpen && isAdmin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                  <h2 className="text-lg font-black text-slate-900">{editingModule ? 'Edit Module' : 'Add New Module'}</h2>
-                  <button onClick={() => setIsModuleModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2"><X size={20}/></button>
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+           <div className="bg-white rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-500 border border-white">
+              <div className="px-10 py-8 bg-slate-900 text-white flex justify-between items-center relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 blur-[100px] rounded-full"></div>
+                  <div className="relative z-10">
+                     <h2 className="text-2xl font-black tracking-tight">{editingModule ? 'Recalibrate Module' : 'Architect Solution'}</h2>
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Solution Catalog Optimization</p>
+                  </div>
+                  <button onClick={() => { setIsModuleModalOpen(false); setEditingModule(null); }} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all relative z-10"><X size={24}/></button>
               </div>
-              <form onSubmit={handleModuleSubmit} className="p-8 space-y-6">
-                  <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Module Name</label>
-                      <input required name="name" defaultValue={editingModule?.name} className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. Auth System" />
+              <form onSubmit={handleModuleSubmit} className="p-10 space-y-8 bg-white">
+                  <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Module Identity</label>
+                      <input required name="name" defaultValue={editingModule?.name} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-brand-500 focus:bg-white rounded-2xl font-black text-sm outline-none transition-all" placeholder="e.g. Auth System V3" />
                   </div>
-                  <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
-                      <textarea required name="description" defaultValue={editingModule?.description} rows={3} className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none resize-none" placeholder="What does this module include?" />
+                  <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Capability Description</label>
+                      <textarea required name="description" defaultValue={editingModule?.description} rows={3} className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-brand-500 focus:bg-white rounded-2xl font-bold text-sm outline-none resize-none transition-all" placeholder="Quantify the value proposition..." />
                   </div>
-                  <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Price (₹)</label>
-                      <div className="relative">
-                        <IndianRupee size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input required name="price" type="number" defaultValue={editingModule?.price} className="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-2xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="20000" />
+                  <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Numerical Price Index (₹)</label>
+                      <div className="relative group">
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 p-1.5 bg-brand-100 text-brand-700 rounded-lg">
+                           <IndianRupee size={16} />
+                        </div>
+                        <input required name="price" type="number" defaultValue={editingModule?.price} className="w-full pl-16 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 focus:bg-white rounded-[24px] font-black text-xl outline-none transition-all" placeholder="25000" />
                       </div>
                   </div>
-                  <div className="pt-4 flex gap-3">
-                       <button type="button" onClick={() => setIsModuleModalOpen(false)} className="flex-1 py-4 text-slate-500 font-black text-sm hover:bg-slate-50 rounded-2xl transition-all">Cancel</button>
-                       <button type="submit" className="flex-1 py-4 bg-slate-900 text-white font-black text-sm rounded-2xl hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all">Save Changes</button>
+                  <div className="pt-4 flex gap-4">
+                       <button type="button" onClick={() => { setIsModuleModalOpen(false); setEditingModule(null); }} className="flex-1 py-5 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">Cancel</button>
+                       <button type="submit" className="flex-[2] py-5 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-800 shadow-2xl shadow-slate-200 transition-all">Finalize Solution</button>
                   </div>
               </form>
            </div>
@@ -290,32 +385,35 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
 
       {/* INVITE USER MODAL */}
       {isInviteModalOpen && isAdmin && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <h2 className="text-lg font-black text-slate-900">Invite Team Member</h2>
-                    <button onClick={() => setIsInviteModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-500 border border-white">
+                <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <div>
+                       <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Provision Access</h2>
+                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Authorized Team Invitation</p>
+                    </div>
+                    <button onClick={() => setIsInviteModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600"><X size={20}/></button>
                 </div>
-                <form onSubmit={handleInviteUser} className="p-6 space-y-4">
-                    <div className="space-y-1">
+                <form onSubmit={handleInviteUser} className="p-8 space-y-6">
+                    <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Full Name</label>
-                        <input required name="name" className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. Sara Smith" />
+                        <input required name="name" className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Sara Smith" />
                     </div>
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</label>
-                        <input required name="email" type="email" className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="sara@vswdata.in" />
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</label>
+                        <input required name="email" type="email" className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="sara@vswdata.in" />
                     </div>
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</label>
-                        <select name="role" className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none appearance-none">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Tier</label>
+                        <select name="role" className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none appearance-none cursor-pointer">
                             {Object.values(UserRole).map(role => (
                                 <option key={role} value={role}>{role}</option>
                             ))}
                         </select>
                     </div>
-                    <div className="pt-4 flex gap-2">
-                         <button type="button" onClick={() => setIsInviteModalOpen(false)} className="flex-1 py-4 text-slate-500 font-black text-sm hover:bg-slate-50 rounded-2xl transition-all">Cancel</button>
-                         <button type="submit" className="flex-1 py-4 bg-slate-900 text-white font-black text-sm rounded-2xl hover:bg-slate-800 transition-all">Send Invite</button>
+                    <div className="pt-4 flex gap-3">
+                         <button type="button" onClick={() => setIsInviteModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 rounded-xl transition-all">Cancel</button>
+                         <button type="submit" className="flex-[2] py-4 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-lg">Provision Access</button>
                     </div>
                 </form>
             </div>
