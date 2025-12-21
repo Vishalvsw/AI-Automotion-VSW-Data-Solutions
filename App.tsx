@@ -4,6 +4,7 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
+import LeadProfile from './pages/LeadProfile';
 import Onboarding from './pages/Onboarding';
 import Projects from './pages/Projects';
 import Finance from './pages/Finance';
@@ -104,6 +105,7 @@ const AppContent: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Dashboard user={user} />} />
                 <Route path="/leads" element={<Leads user={user} />} />
+                <Route path="/leads/:id" element={<LeadProfile user={user} />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/projects" element={<Projects user={user} />} />
                 <Route path="/finance" element={isFounder || isFinance ? <Finance /> : <Navigate to="/" />} />

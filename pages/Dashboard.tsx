@@ -8,7 +8,7 @@ import {
   Target, ArrowRight, Wallet, Clock, Activity, 
   Globe, TrendingUp, DollarSign, CheckCircle, 
   AlertTriangle, ArrowUpRight, BarChart3, PieChart as PieIcon,
-  ShieldCheck, Layers, ChevronRight, PhoneCall, AlertOctagon
+  ShieldCheck, Layers, ChevronRight, PhoneCall, AlertOctagon, Sparkles
 } from 'lucide-react';
 import { UserRole, LeadStatus, User, ProjectStatus } from '../types';
 import { useApp } from '../context/AppContext';
@@ -234,7 +234,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
              </div>
              <div className="space-y-4">
                {leads.filter(l => l.priority === 'Hot').slice(0, 5).map(l => (
-                 <div key={l.id} className="p-5 bg-slate-50/50 hover:bg-white hover:shadow-xl hover:border-brand-100 transition-all rounded-[28px] border border-slate-100 flex items-center justify-between group cursor-pointer">
+                 <Link to={`/leads/${l.id}`} key={l.id} className="p-5 bg-slate-50/50 hover:bg-white hover:shadow-xl hover:border-brand-100 transition-all rounded-[28px] border border-slate-100 flex items-center justify-between group cursor-pointer">
                     <div className="flex items-center gap-4">
                        <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center font-black border border-red-100 group-hover:bg-red-600 group-hover:text-white transition-all">
                           {l.company.charAt(0)}
@@ -248,7 +248,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                        <div className="text-sm font-black text-slate-900">{formatRupee(l.value)}</div>
                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{l.assignedTo}</div>
                     </div>
-                 </div>
+                 </Link>
                ))}
              </div>
            </div>
@@ -347,70 +347,85 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
         </div>
 
-        {/* PROMINENT OVERDUE WIDGET SECTION */}
+        {/* PROMINENT OVERDUE WIDGET SECTION - CRITICAL INTERVENTION */}
         {overdueLeads.length > 0 && (
           <div className="grid grid-cols-1 gap-6 animate-in slide-in-from-top-4 duration-700">
-            <div className="bg-white border-2 border-red-100 rounded-[32px] overflow-hidden shadow-2xl shadow-red-50 relative">
-              <div className="bg-red-600 p-6 flex items-center justify-between text-white relative">
+            <div className="bg-white border-2 border-red-100 rounded-[40px] overflow-hidden shadow-2xl shadow-red-50 relative">
+              <div className="bg-gradient-to-r from-red-600 to-rose-700 p-8 flex items-center justify-between text-white relative">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                   <AlertOctagon size={80} />
+                   <AlertOctagon size={120} />
                 </div>
-                <div className="flex items-center gap-4 relative z-10">
-                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md animate-pulse">
-                      <AlertTriangle size={24} />
+                <div className="flex items-center gap-6 relative z-10">
+                   <div className="w-16 h-16 bg-white/20 rounded-[24px] flex items-center justify-center backdrop-blur-md animate-pulse border border-white/30">
+                      <AlertTriangle size={32} />
                    </div>
                    <div>
-                      <h2 className="text-xl font-black uppercase tracking-tight">CRITICAL OVERDUE ACTION REQUIRED</h2>
-                      <p className="text-xs text-red-100 font-bold opacity-80 uppercase tracking-widest">Your attention is requested on {overdueLeads.length} stagnant leads</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest backdrop-blur-sm">System Priority 1</span>
+                        <h2 className="text-2xl font-black uppercase tracking-tight">STAGNANT NODE ALERT</h2>
+                      </div>
+                      <p className="text-sm text-red-100 font-bold opacity-80 uppercase tracking-widest flex items-center gap-2">
+                        <Sparkles size={14} className="animate-spin duration-[3000ms]" /> Intelligence detects {overdueLeads.length} critical lapses in engagement strategy
+                      </p>
                    </div>
                 </div>
-                <Link to="/leads" className="bg-white text-red-600 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-xl shadow-red-900/20 relative z-10">
-                   Open Cockpit
+                <Link to="/leads" className="bg-white text-red-600 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-2xl shadow-red-900/40 relative z-10">
+                   Audit Cockpit
                 </Link>
               </div>
               
-              <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-red-50/30">
-                {overdueLeads.map(lead => (
-                  <Link 
-                    to="/leads" 
-                    key={lead.id} 
-                    className="bg-white p-5 rounded-2xl border border-red-100 hover:border-red-500 hover:shadow-lg transition-all group flex flex-col justify-between min-h-[140px]"
-                  >
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center font-black border border-red-100 group-hover:bg-red-600 group-hover:text-white transition-all">
-                          {lead.company.charAt(0)}
-                        </div>
-                        <span className="bg-red-100 text-red-700 text-[8px] font-black px-2 py-1 rounded uppercase tracking-[0.1em]">
-                          {Math.floor((today.getTime() - new Date(lead.nextFollowUp!).getTime()) / (1000 * 3600 * 24))} Days Late
-                        </span>
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-red-50/20">
+                {overdueLeads.map(lead => {
+                  const daysLate = Math.floor((today.getTime() - new Date(lead.nextFollowUp!).getTime()) / (1000 * 3600 * 24));
+                  return (
+                    <Link 
+                      to={`/leads/${lead.id}`} 
+                      key={lead.id} 
+                      className="bg-white p-6 rounded-[32px] border border-red-100 hover:border-red-500 hover:shadow-2xl hover:-translate-y-1 transition-all group flex flex-col justify-between min-h-[180px] relative overflow-hidden"
+                    >
+                      <div className="absolute -right-4 -top-4 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                         <Target size={80} />
                       </div>
-                      <h4 className="font-black text-slate-900 group-hover:text-red-600 transition-colors">{lead.company}</h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{lead.name}</p>
-                    </div>
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-red-50">
-                       <span className="text-sm font-black text-slate-900">{formatRupee(lead.value)}</span>
-                       <span className="text-[10px] font-black text-red-600 flex items-center gap-1 uppercase tracking-widest">
-                          Contact <ChevronRight size={14} />
-                       </span>
-                    </div>
-                  </Link>
-                ))}
+                      <div>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg border transition-all ${
+                            lead.priority === 'Hot' ? 'bg-red-50 text-red-600 border-red-100 group-hover:bg-red-600 group-hover:text-white' : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-slate-900 group-hover:text-white'
+                          }`}>
+                            {lead.company.charAt(0)}
+                          </div>
+                          <div className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest animate-pulse ${
+                            daysLate > 3 ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {daysLate} Days Stagnant
+                          </div>
+                        </div>
+                        <h4 className="font-black text-slate-900 group-hover:text-red-600 transition-colors text-lg leading-tight mb-1">{lead.company}</h4>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lead.name}</p>
+                      </div>
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-red-50/50">
+                         <span className="text-base font-black text-slate-900">{formatRupee(lead.value)}</span>
+                         <div className="flex items-center gap-1.5 text-[9px] font-black text-red-600 uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                            Intervene <ChevronRight size={14} />
+                         </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>
         )}
 
         {todaysFollowUps.length > 0 && overdueLeads.length === 0 && (
-          <div className="bg-brand-50 border border-brand-200 p-4 rounded-2xl flex items-center justify-between border-l-8 border-brand-500">
-            <div className="flex items-center gap-4">
-              <div className="bg-brand-500 p-2 rounded-full text-white"><Clock size={20} /></div>
+          <div className="bg-brand-50 border border-brand-200 p-6 rounded-[32px] flex items-center justify-between border-l-8 border-brand-500 shadow-xl shadow-brand-100 animate-in slide-in-from-right-4 duration-500">
+            <div className="flex items-center gap-6">
+              <div className="bg-brand-500 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-200"><Clock size={28} /></div>
               <div>
-                <h4 className="font-bold text-brand-900">{todaysFollowUps.length} SCHEDULED FOR TODAY</h4>
-                <p className="text-xs text-brand-700 font-medium">Keep the momentum going. Reach out to these nodes today.</p>
+                <h4 className="text-xl font-black text-brand-900 uppercase tracking-tight">{todaysFollowUps.length} SCHEDULED FOR TODAY</h4>
+                <p className="text-xs text-brand-700 font-bold uppercase tracking-widest opacity-80">Cycle Intelligence suggests immediate strategic contact.</p>
               </div>
             </div>
-            <Link to="/leads" className="px-6 py-2.5 bg-brand-600 text-white text-sm font-extrabold rounded-xl hover:bg-brand-700">View Schedule</Link>
+            <Link to="/leads" className="px-8 py-4 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-700 shadow-xl shadow-brand-200">Execute Schedule</Link>
           </div>
         )}
 
@@ -422,42 +437,42 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm h-full flex flex-col">
-               <div className="flex justify-between items-center mb-6">
-                 <h3 className="font-bold text-slate-900 flex items-center gap-2 text-lg">
-                    <Clock size={20} className="text-brand-500" />
-                    Strategic Follow-up Queue
+          <div className="lg:col-span-2 bg-white rounded-[40px] border border-slate-200 p-8 shadow-sm h-full flex flex-col">
+               <div className="flex justify-between items-center mb-8 px-2">
+                 <h3 className="font-black text-slate-900 flex items-center gap-3 text-lg uppercase tracking-tight">
+                    <Clock size={24} className="text-brand-500" />
+                    Priority Engagement Queue
                  </h3>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">Top 5 Priority</span>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">Intelligent Sort</span>
                </div>
-               <div className="space-y-3 flex-1">
+               <div className="space-y-4 flex-1">
                   {bdaLeads.length > 0 ? bdaLeads.sort((a, b) => (a.priority === 'Hot' ? -1 : 1)).slice(0, 5).map(lead => {
                     const isLate = lead.nextFollowUp && new Date(lead.nextFollowUp) < today;
                     return (
-                      <div key={lead.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all group cursor-pointer ${
-                        isLate ? 'bg-red-50/30 border-red-100' : 'bg-slate-50/30 border-slate-100 hover:bg-white hover:shadow-xl hover:border-brand-200'
+                      <Link to={`/leads/${lead.id}`} key={lead.id} className={`flex items-center justify-between p-6 rounded-[32px] border transition-all group cursor-pointer ${
+                        isLate ? 'bg-red-50/30 border-red-100 hover:shadow-xl hover:shadow-red-50' : 'bg-slate-50/30 border-slate-100 hover:bg-white hover:shadow-2xl hover:shadow-slate-100 hover:border-brand-200'
                       }`}>
-                         <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm border shadow-sm ${
-                              lead.priority === 'Hot' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-white text-slate-600 border-slate-100'
+                         <div className="flex items-center gap-5">
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-base border shadow-sm transition-all ${
+                              lead.priority === 'Hot' ? 'bg-red-50 text-red-600 border-red-100 group-hover:bg-red-600 group-hover:text-white' : 'bg-white text-slate-600 border-slate-100 group-hover:bg-slate-900 group-hover:text-white'
                             }`}>
                                {lead.company.charAt(0)}
                             </div>
                             <div>
-                               <div className="text-sm font-black text-slate-900 group-hover:text-brand-600 transition-colors flex items-center gap-2">
+                               <div className="text-base font-black text-slate-900 group-hover:text-brand-600 transition-colors flex items-center gap-3">
                                  {lead.company}
-                                 {isLate && <span className="bg-red-600 text-white text-[6px] px-1 py-0.5 rounded font-black uppercase">LATE</span>}
+                                 {isLate && <span className="bg-red-600 text-white text-[7px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse">Critical Delay</span>}
                                </div>
-                               <div className="text-[10px] text-slate-400 font-black uppercase tracking-tight">{lead.status}</div>
+                               <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">{lead.status}</div>
                             </div>
                          </div>
                          <div className="text-right">
-                            <div className={`text-[10px] font-black uppercase tracking-wider ${isLate ? 'text-red-500' : 'text-slate-400'}`}>
+                            <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isLate ? 'text-red-500' : 'text-slate-400'}`}>
                                {lead.nextFollowUp || 'No Date'}
                             </div>
-                            <div className="text-sm font-black text-slate-900">{formatRupee(lead.value)}</div>
+                            <div className="text-base font-black text-slate-900">{formatRupee(lead.value)}</div>
                          </div>
-                      </div>
+                      </Link>
                     );
                   }) : (
                     <div className="flex-1 flex flex-col items-center justify-center py-10 opacity-40">
@@ -466,45 +481,45 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     </div>
                   )}
                </div>
-               <Link to="/leads" className="mt-8 text-xs font-black text-slate-400 flex items-center justify-center gap-2 hover:text-brand-600 transition-colors uppercase tracking-widest p-4 border-2 border-dashed border-slate-100 rounded-2xl hover:bg-brand-50/50 hover:border-brand-100">
-                  Access Full BDA Cockpit <ArrowRight size={14} />
+               <Link to="/leads" className="mt-8 text-[10px] font-black text-slate-400 flex items-center justify-center gap-3 hover:text-brand-600 transition-colors uppercase tracking-widest p-6 border-2 border-dashed border-slate-100 rounded-[32px] hover:bg-brand-50/50 hover:border-brand-100">
+                  Access Full BDA Infrastructure Cockpit <ArrowRight size={14} />
                </Link>
           </div>
 
-          <div className="lg:col-span-1 bg-slate-900 text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+          <div className="lg:col-span-1 bg-slate-900 text-white rounded-[40px] p-10 shadow-2xl relative overflow-hidden group flex flex-col">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform duration-700">
                <Zap size={100} className="text-brand-400" />
             </div>
-            <h3 className="text-xl font-black mb-8 flex items-center gap-3">
+            <h3 className="text-xl font-black mb-10 flex items-center gap-3 relative z-10 uppercase tracking-tight">
               <Activity size={24} className="text-brand-400" />
-              Sales Performance
+              Sales Velocity
             </h3>
-            <div className="space-y-8 relative z-10">
-              <div className="p-5 bg-white/5 rounded-2xl border border-white/10">
-                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Weekly Target Progress</div>
-                 <div className="flex justify-between items-end mb-2">
-                    <span className="text-2xl font-black">{conversionRate}%</span>
-                    <span className="text-[10px] font-bold text-brand-400">Target: 30%</span>
+            <div className="space-y-10 relative z-10 flex-1">
+              <div className="p-6 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-sm">
+                 <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Cycle Conversion Efficiency</div>
+                 <div className="flex justify-between items-end mb-3">
+                    <span className="text-3xl font-black">{conversionRate}%</span>
+                    <span className="text-[10px] font-black text-brand-400 uppercase">Goal: 30%</span>
                  </div>
-                 <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(conversionRate, 100)}%` }}></div>
+                 <div className="w-full bg-white/10 h-2.5 rounded-full overflow-hidden">
+                    <div className="h-full bg-brand-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(59,130,246,0.5)]" style={{ width: `${Math.min(conversionRate, 100)}%` }}></div>
                  </div>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Objectives</h4>
+              <div className="space-y-5">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Strategic Objectives</h4>
                 {[
                   { label: "Hot Lead Conversion", sub: "Convert 2 priority nodes", done: realizedRevenue > 50000 },
                   { label: "Follow-up Hygiene", sub: "No overdue tasks", done: overdueLeads.length === 0 },
                   { label: "Revenue Milestone", sub: "Achieve ₹1L realized", done: realizedRevenue >= 100000 },
                 ].map((obj, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-md flex items-center justify-center ${obj.done ? 'bg-green-500 text-slate-900' : 'bg-white/10 text-white/20'}`}>
-                      <CheckCircle size={12} />
+                  <div key={i} className="flex items-center gap-4 group/item">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${obj.done ? 'bg-green-500 text-slate-900 scale-110' : 'bg-white/10 text-white/20 group-hover/item:bg-white/20'}`}>
+                      <CheckCircle size={14} />
                     </div>
                     <div>
-                      <div className={`text-xs font-bold ${obj.done ? 'text-white' : 'text-slate-400'}`}>{obj.label}</div>
-                      <div className="text-[9px] text-slate-500 uppercase tracking-tighter">{obj.sub}</div>
+                      <div className={`text-xs font-black uppercase tracking-tight ${obj.done ? 'text-white' : 'text-slate-400'}`}>{obj.label}</div>
+                      <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{obj.sub}</div>
                     </div>
                   </div>
                 ))}
