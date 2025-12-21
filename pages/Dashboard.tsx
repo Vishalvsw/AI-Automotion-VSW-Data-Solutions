@@ -325,10 +325,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       ? Math.round((bdaLeads.filter(l => l.status === LeadStatus.CLOSED_WON).length / bdaLeads.length) * 100) 
       : 0;
 
-    const targetProgress = user.salesTarget 
-      ? Math.round((realizedRevenue / user.salesTarget) * 100) 
-      : 0;
-
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -433,18 +429,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
            <DashboardCard title="Personal Pipeline" value={formatRupee(pipelineValue)} change="Active Leads" positive={true} icon={<Wallet size={20} />} />
            <DashboardCard title="Conversion Rate" value={`${conversionRate}%`} change="Closed Won" positive={true} icon={<Target size={20} />} />
            <DashboardCard title="Assigned Nodes" value={bdaLeads.length.toString()} change="Portfolio" positive={true} icon={<Users size={20} />} />
            <DashboardCard title="Potential Bonus" value={formatRupee(potentialComm)} change="Projection" positive={true} icon={<TrendingUp size={20} />} />
-           <DashboardCard 
-              title="Sales Target" 
-              value={formatRupee(user.salesTarget || 0)} 
-              change={`${targetProgress}% Achieved`} 
-              positive={targetProgress >= 40} 
-              icon={<Target size={20} className="text-brand-600" />} 
-           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

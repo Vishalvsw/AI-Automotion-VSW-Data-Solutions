@@ -21,7 +21,6 @@ export interface User {
   commissionRate?: number;
   phoneNumber?: string;
   preferences?: UserPreferences;
-  salesTarget?: number;
 }
 
 export interface Notification {

@@ -9,7 +9,7 @@ const getDate = (diffDays: number) => {
 
 export const MOCK_USERS: User[] = [
   { id: '1', name: 'Vishal (Founder)', email: 'vishal@vswdata.in', role: UserRole.FOUNDER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vishal', phoneNumber: '9876543210' },
-  { id: '2', name: 'Sneha (BDA)', email: 'sneha@vswdata.in', role: UserRole.BDA, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha', commissionRate: 8, phoneNumber: '9876543212', salesTarget: 500000 },
+  { id: '2', name: 'Sneha (BDA)', email: 'sneha@vswdata.in', role: UserRole.BDA, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha', commissionRate: 8, phoneNumber: '9876543212' },
   { id: '3', name: 'Rahul (Dev)', email: 'rahul@vswdata.in', role: UserRole.DEVELOPER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul', phoneNumber: '9876543215' },
   { id: '4', name: 'Priya (Designer)', email: 'priya@vswdata.in', role: UserRole.DESIGNER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya', phoneNumber: '9876543216' },
   { id: '5', name: 'Karan (Finance)', email: 'karan@vswdata.in', role: UserRole.FINANCE, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Karan', phoneNumber: '9876543217' },
