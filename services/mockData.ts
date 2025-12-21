@@ -10,10 +10,11 @@ const getDate = (diffDays: number) => {
 export const MOCK_USERS: User[] = [
   { id: '1', name: 'Vishal (Founder)', email: 'vishal@vswdata.in', role: UserRole.FOUNDER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vishal', phoneNumber: '9876543210' },
   { id: '2', name: 'Sneha (BDA)', email: 'sneha@vswdata.in', role: UserRole.BDA, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha', commissionRate: 8, phoneNumber: '9876543212' },
+  { id: '3', name: 'Rahul (Dev)', email: 'rahul@vswdata.in', role: UserRole.DEVELOPER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul', phoneNumber: '9876543215' },
+  { id: '4', name: 'Priya (Designer)', email: 'priya@vswdata.in', role: UserRole.DESIGNER, avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya', phoneNumber: '9876543216' },
 ];
 
 export const MOCK_LEADS: Lead[] = [
-  // Fix: Use LeadPriority enum members instead of string literals to match Lead interface type.
   { id: 'l1', name: 'Satish', company: 'CNC-Satish', email: 'satish@cnc.com', phone: '9123456780', value: 16000, status: LeadStatus.CONTACTED, lastContact: getDate(-1), nextFollowUp: '2024-11-24', assignedTo: 'Sneha', score: 30, tags: ['Still not ready'], source: LeadSource.REFERRAL, priority: LeadPriority.COLD },
   { id: 'l2', name: 'Shiva', company: 'CCTV Shiva - Bharath Digital', email: 'shiva@cctv.com', phone: '9123456781', value: 158000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 85, tags: ['WAITING FOR ADVANCE'], source: LeadSource.DIRECT, priority: LeadPriority.HOT },
 ];
@@ -30,8 +31,8 @@ export const MOCK_PROJECTS: Project[] = [
     financials: { basePrice: 15000, total: 18000, advance: 3000, stage1: 0, stage2: 0, stage3: 0, totalPaid: 3000, balance: -15000 },
     techMilestones: { demo: true, frontend: false, backend: false, deployment: false, domain: false, api: false },
     tasks: [
-      { id: 't1', title: 'Database Schema Design', assignee: 'Vishal', priority: 'High', status: TaskStatus.DONE },
-      { id: 't2', title: 'Attendance Module UI', assignee: 'Dev', priority: 'Medium', status: TaskStatus.IN_PROGRESS }
+      { id: 't1', title: 'Database Schema Design', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.DONE },
+      { id: 't2', title: 'Attendance Module UI', assignee: 'Priya (Designer)', priority: 'Medium', status: TaskStatus.IN_PROGRESS }
     ] 
   },
   { 
@@ -45,8 +46,8 @@ export const MOCK_PROJECTS: Project[] = [
     financials: { basePrice: 122000, total: 122000, advance: 24600, stage1: 25000, stage2: 0, stage3: 0, totalPaid: 49600, balance: -72400 },
     techMilestones: { demo: true, frontend: true, backend: true, deployment: false, domain: false, api: false },
     tasks: [
-      { id: 't3', title: 'Vendor Dashboard API', assignee: 'Vishal', priority: 'High', status: TaskStatus.DONE },
-      { id: 't4', title: 'Payment Gateway Integration', assignee: 'Vishal', priority: 'High', status: TaskStatus.IN_PROGRESS }
+      { id: 't3', title: 'Vendor Dashboard API', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.DONE },
+      { id: 't4', title: 'Payment Gateway Integration', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.IN_PROGRESS }
     ] 
   },
   { 
@@ -60,35 +61,9 @@ export const MOCK_PROJECTS: Project[] = [
     financials: { basePrice: 160000, total: 160000, advance: 0, stage1: 0, stage2: 0, stage3: 0, totalPaid: 0, balance: -160000 },
     techMilestones: { demo: false, frontend: false, backend: false, deployment: false, domain: false, api: false },
     tasks: [
-      { id: 't5', title: 'Requirement Gathering', assignee: 'Vishal', priority: 'High', status: TaskStatus.IN_PROGRESS }
+      { id: 't5', title: 'Requirement Gathering', assignee: 'Sneha (BDA)', priority: 'High', status: TaskStatus.IN_PROGRESS }
     ] 
   },
-  { 
-    id: 'p4', 
-    title: 'BMS Platform', 
-    client: 'BMS', 
-    status: ProjectStatus.DELIVERY, 
-    notes: 'project is ready but make not paid',
-    dueDate: getDate(-5), 
-    progress: 95, 
-    financials: { basePrice: 22000, total: 22000, advance: 0, stage1: 0, stage2: 0, stage3: 0, totalPaid: 0, balance: -22000 },
-    techMilestones: { demo: true, frontend: true, backend: true, deployment: true, domain: true, api: true },
-    tasks: [
-      { id: 't6', title: 'Final Handover Documentation', assignee: 'Vishal', priority: 'Medium', status: TaskStatus.TODO }
-    ] 
-  },
-  { 
-    id: 'p5', 
-    title: 'EduLink Integration', 
-    client: 'AMKA EduLlink', 
-    status: ProjectStatus.REQUIREMENTS, 
-    notes: 'meeting 15 december',
-    dueDate: getDate(60), 
-    progress: 0, 
-    financials: { basePrice: 45000, total: 45000, advance: 0, stage1: 0, stage2: 0, stage3: 0, totalPaid: 0, balance: -45000 },
-    techMilestones: { demo: false, frontend: false, backend: false, deployment: false, domain: false, api: false },
-    tasks: [] 
-  }
 ];
 
 export const MOCK_INVOICES: Invoice[] = [

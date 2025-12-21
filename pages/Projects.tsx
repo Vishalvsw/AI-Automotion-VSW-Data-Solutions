@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole, TaskStatus } from '../types';
-import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo } from 'lucide-react';
+import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo, Plus, Sparkles, User as UserIcon } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { MOCK_USERS } from '../services/mockData';
 
 interface ProjectsProps {
   user: User;
@@ -15,6 +16,9 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [viewMode, setViewMode] = useState<'kanban' | 'ledger'>('ledger');
   
+  // New Task State
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  
   const columns = [
     { id: ProjectStatus.REQUIREMENTS, title: 'Requirements', color: 'bg-purple-50 text-purple-700', icon: FileText },
     { id: ProjectStatus.PRODUCTION, title: 'In Progress', color: 'bg-blue-50 text-blue-700', icon: Code },
@@ -23,6 +27,50 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     { id: ProjectStatus.RETAINER, title: 'Retainer', color: 'bg-orange-50 text-orange-700', icon: Clock },
     { id: ProjectStatus.DROPPED, title: 'Dropped', color: 'bg-slate-50 text-slate-500', icon: Minus },
   ];
+
+  // Auto-assignment Logic
+  const smartAssignment = useMemo(() => {
+    const title = newTaskTitle.toLowerCase();
+    
+    const rules = [
+      { keywords: ['api', 'backend', 'database', 'server', 'logic', 'integration'], role: UserRole.DEVELOPER },
+      { keywords: ['ui', 'ux', 'design', 'logo', 'frontend', 'layout', 'figma', 'css'], role: UserRole.DESIGNER },
+      { keywords: ['sales', 'lead', 'client', 'meeting', 'requirements', 'bda'], role: UserRole.BDA }
+    ];
+
+    const matchedRule = rules.find(rule => rule.keywords.some(k => title.includes(k)));
+    if (matchedRule) {
+      const suggestedUser = MOCK_USERS.find(u => u.role === matchedRule.role);
+      return suggestedUser ? suggestedUser.name : 'Unassigned';
+    }
+    
+    return 'Unassigned';
+  }, [newTaskTitle]);
+
+  const handleAddTask = (projectId: string) => {
+    if (!newTaskTitle.trim()) return;
+    
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const newTask = {
+      id: `task-${Date.now()}`,
+      title: newTaskTitle,
+      assignee: smartAssignment,
+      priority: 'Medium',
+      status: TaskStatus.TODO
+    };
+
+    const updatedTasks = [...project.tasks, newTask];
+    updateProject(projectId, { tasks: updatedTasks });
+    
+    // Sync local selected project if open
+    if (selectedProject?.id === projectId) {
+      setSelectedProject({ ...selectedProject, tasks: updatedTasks });
+    }
+
+    setNewTaskTitle('');
+  };
 
   const formatINR = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -49,7 +97,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     if (!project) return;
     const newFinancials = { ...project.financials, [field]: val };
     
-    // Recalculate totals
     newFinancials.totalPaid = (newFinancials.advance || 0) + (newFinancials.stage1 || 0) + (newFinancials.stage2 || 0) + (newFinancials.stage3 || 0);
     newFinancials.balance = newFinancials.totalPaid - newFinancials.total;
 
@@ -195,7 +242,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         </div>
       )}
 
-      {/* DETAIL DRAWER */}
       {selectedProject && (
         <div className="fixed inset-0 z-[100] flex items-center justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
            <div className="w-full max-w-xl h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
@@ -208,21 +254,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
-                 <div className="space-y-4">
-                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Globe size={18} className="text-brand-600" /> Operational Context</h3>
-                    <div className="p-6 bg-brand-50 rounded-[32px] border border-brand-100">
-                       {isAdmin ? (
-                         <textarea 
-                           className="w-full bg-transparent border-none p-0 text-sm font-bold text-slate-700 focus:ring-0 outline-none resize-none"
-                           value={selectedProject.notes}
-                           onChange={(e) => updateProject(selectedProject.id, { notes: e.target.value })}
-                         />
-                       ) : (
-                         <p className="text-sm font-bold text-slate-700 italic">"{selectedProject.notes || 'No active operational notes.'}"</p>
-                       )}
-                    </div>
-                 </div>
-
+                 {/* Financial Flow */}
                  <div className="space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><IndianRupee size={18} className="text-brand-600" /> Financial Flow</h3>
                     {!isAdmin && (
@@ -252,34 +284,59 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                           />
                        </div>
                     </div>
-                    <div className={`p-6 rounded-[32px] flex justify-between items-center ${selectedProject.financials.balance === 0 ? 'bg-green-600' : 'bg-slate-900'} text-white shadow-2xl`}>
-                        <div>
-                           <p className="text-[10px] font-black uppercase opacity-60">Revenue Balance</p>
-                           <h4 className="text-2xl font-black">{formatINR(selectedProject.financials.balance)}</h4>
-                        </div>
-                        <div className="text-right">
-                           <p className="text-[10px] font-black uppercase opacity-60">Total Collected</p>
-                           <h4 className="text-xl font-bold">{formatINR(selectedProject.financials.totalPaid)}</h4>
-                        </div>
-                    </div>
                  </div>
 
-                 {/* TASK MANAGEMENT SECTION */}
+                 {/* MILESTONE TASKS with Smart Auto-Assign */}
                  <div className="space-y-4">
-                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><ListTodo size={18} className="text-brand-600" /> Milestone Tasks</h3>
-                    <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                       <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                          <ListTodo size={18} className="text-brand-600" /> 
+                          Milestone Tasks
+                       </h3>
+                    </div>
+
+                    {isAdmin && (
+                      <div className="relative group">
+                         <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                            <Plus size={16} className="text-slate-300" />
+                            {newTaskTitle && smartAssignment !== 'Unassigned' && (
+                              <div className="bg-brand-50 text-brand-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase flex items-center gap-1 animate-in zoom-in">
+                                <Sparkles size={10} /> {smartAssignment}
+                              </div>
+                            )}
+                         </div>
+                         <input 
+                            value={newTaskTitle}
+                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddTask(selectedProject.id)}
+                            className="w-full pl-32 pr-20 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-bold outline-none focus:bg-white focus:border-brand-500 transition-all"
+                            placeholder="Type 'Design homepage' or 'API setup'..."
+                         />
+                         <button 
+                            onClick={() => handleAddTask(selectedProject.id)}
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase rounded-xl transition-all ${newTaskTitle ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                         >
+                            Add
+                         </button>
+                      </div>
+                    )}
+
+                    <div className="space-y-3 pt-2">
                        {selectedProject.tasks.length > 0 ? selectedProject.tasks.map((task) => (
-                         <div key={task.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between group hover:bg-white hover:shadow-sm transition-all">
+                         <div key={task.id} className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between group hover:shadow-md transition-all">
                             <div className="flex-1">
                                <div className="flex items-center gap-2 mb-1">
                                   <span className="text-xs font-black text-slate-900">{task.title}</span>
                                   <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                                    task.priority === 'High' ? 'bg-red-100 text-red-600' : 'bg-slate-200 text-slate-600'
+                                    task.priority === 'High' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'
                                   }`}>
                                     {task.priority}
                                   </span>
                                </div>
-                               <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Assignee: {task.assignee}</div>
+                               <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                                  <UserIcon size={10} className="text-brand-500" />
+                                  {task.assignee}
+                               </div>
                             </div>
                             <div className="flex items-center gap-2">
                                {isAdmin ? (
@@ -287,20 +344,20 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                                    value={task.status}
                                    onChange={(e) => handleUpdateTaskStatus(selectedProject.id, task.id, e.target.value as TaskStatus)}
                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-none outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer ${
-                                     task.status === TaskStatus.DONE ? 'bg-green-100 text-green-700' :
-                                     task.status === TaskStatus.BLOCKED ? 'bg-red-100 text-red-700' :
-                                     task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-100 text-blue-700' :
-                                     'bg-slate-200 text-slate-600'
+                                     task.status === TaskStatus.DONE ? 'bg-green-50 text-green-700' :
+                                     task.status === TaskStatus.BLOCKED ? 'bg-red-50 text-red-700' :
+                                     task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-700' :
+                                     'bg-slate-100 text-slate-600'
                                    }`}
                                  >
                                     {Object.values(TaskStatus).map(s => <option key={s} value={s}>{s}</option>)}
                                  </select>
                                ) : (
                                  <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                                   task.status === TaskStatus.DONE ? 'bg-green-100 text-green-700' :
-                                   task.status === TaskStatus.BLOCKED ? 'bg-red-100 text-red-700' :
-                                   task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-100 text-blue-700' :
-                                   'bg-slate-200 text-slate-600'
+                                   task.status === TaskStatus.DONE ? 'bg-green-50 text-green-700' :
+                                   task.status === TaskStatus.BLOCKED ? 'bg-red-50 text-red-700' :
+                                   task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-700' :
+                                   'bg-slate-100 text-slate-600'
                                  }`}>
                                     {task.status}
                                  </span>
@@ -315,7 +372,8 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     </div>
                  </div>
 
-                 <div className="space-y-4">
+                 {/* Technical Architecture */}
+                 <div className="space-y-4 pb-10">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Server size={18} className="text-brand-600" /> Technical Architecture</h3>
                     <div className="grid grid-cols-2 gap-4">
                        {Object.entries(selectedProject.techMilestones).map(([key, val]) => (
@@ -336,7 +394,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               </div>
 
               <div className="p-10 border-t border-slate-100 bg-white flex gap-4">
-                 {isAdmin && <button className="flex-1 py-5 bg-slate-900 text-white font-black rounded-3xl text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all">Archive Node</button>}
                  <button onClick={() => setSelectedProject(null)} className="flex-1 py-5 border-2 border-slate-100 text-slate-500 font-black rounded-3xl text-sm uppercase tracking-widest hover:bg-slate-50 transition-all">Dismiss</button>
               </div>
            </div>

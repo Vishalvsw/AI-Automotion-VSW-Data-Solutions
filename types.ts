@@ -1,7 +1,9 @@
 
 export enum UserRole {
   FOUNDER = 'FOUNDER',
-  BDA = 'BDA'
+  BDA = 'BDA',
+  DEVELOPER = 'DEVELOPER',
+  DESIGNER = 'DESIGNER'
 }
 
 export interface UserPreferences {
