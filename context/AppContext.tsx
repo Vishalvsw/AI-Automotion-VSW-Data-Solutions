@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Lead, Project, Invoice, MarketingCampaign, User, QuotationModule, Notification, UserPreferences } from '../types';
-import { MOCK_LEADS, MOCK_PROJECTS, MOCK_INVOICES, MOCK_CAMPAIGNS } from '../services/mockData';
+import { MOCK_LEADS, MOCK_PROJECTS, MOCK_INVOICES, MOCK_CAMPAIGNS, MOCK_USERS } from '../services/mockData';
 
 interface AppContextType {
   leads: Lead[];
@@ -10,6 +10,8 @@ interface AppContextType {
   campaigns: MarketingCampaign[];
   modules: QuotationModule[];
   notifications: Notification[];
+  user: User | null;
+  setUser: (user: User | null) => void;
   updateLead: (id: string, updates: Partial<Lead>) => void;
   addLead: (lead: Lead) => void;
   deleteLead: (id: string) => void;
@@ -40,6 +42,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
   const [invoices, setInvoices] = useState<Invoice[]>(MOCK_INVOICES);
   const [campaigns] = useState<MarketingCampaign[]>(MOCK_CAMPAIGNS);
+  const [user, setUser] = useState<User | null>(null);
   const [modules, setModules] = useState<QuotationModule[]>(() => {
     const saved = localStorage.getItem('vsw_modules');
     return saved ? JSON.parse(saved) : DEFAULT_MODULES;
@@ -71,7 +74,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (isOverdue || isToday) {
           const notificationId = `notif-${lead.id}-${isOverdue ? 'overdue' : 'today'}`;
           
-          // Only add if not already in state
           if (!notifications.some(n => n.id === notificationId)) {
             newNotifications.push({
               id: notificationId,
@@ -84,9 +86,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               read: false,
               leadId: lead.id
             });
-
-            // Simulate Email Sending
-            console.log(`%c[SYSTEM] Simulating Email to BDA: Follow-up needed for ${lead.company}`, 'color: #3b82f6; font-weight: bold;');
           }
         }
       });
@@ -97,7 +96,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     scanLeads();
-    // Scan every hour
     const interval = setInterval(scanLeads, 3600000);
     return () => clearInterval(interval);
   }, [leads, notifications]);
@@ -152,7 +150,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{
-      leads, projects, invoices, campaigns, modules, notifications,
+      leads, projects, invoices, campaigns, modules, notifications, user, setUser,
       updateLead, addLead, deleteLead, updateProject, addProject, updateInvoice, addInvoice,
       addModule, updateModule, deleteModule, markNotificationAsRead, clearAllNotifications
     }}>

@@ -13,6 +13,7 @@ import Marketing from './pages/Marketing';
 import Retention from './pages/Retention';
 import Settings from './pages/Settings';
 import NotificationCenter from './components/NotificationCenter'; 
+import Copilot from './components/Copilot';
 import { User, UserRole } from './types';
 import { Menu, Bell, Search } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext';
@@ -118,6 +119,7 @@ const AppContent: React.FC = () => {
           </main>
         </div>
       </div>
+      <Copilot />
     </Router>
   );
 };
