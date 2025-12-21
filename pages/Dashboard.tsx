@@ -8,7 +8,7 @@ import {
   Target, ArrowRight, Wallet, Clock, Activity, 
   Globe, TrendingUp, DollarSign, CheckCircle, 
   AlertTriangle, ArrowUpRight, BarChart3, PieChart as PieIcon,
-  ShieldCheck, Layers
+  ShieldCheck, Layers, ChevronRight, PhoneCall, AlertOctagon
 } from 'lucide-react';
 import { UserRole, LeadStatus, User, ProjectStatus } from '../types';
 import { useApp } from '../context/AppContext';
@@ -347,22 +347,61 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
         </div>
 
+        {/* PROMINENT OVERDUE WIDGET SECTION */}
         {overdueLeads.length > 0 && (
-          <div className="bg-red-600 text-white p-5 rounded-[24px] flex items-center justify-between shadow-2xl shadow-red-200 border-b-4 border-red-800 animate-in slide-in-from-top-4 duration-500">
-            <div className="flex items-center gap-4">
-              <div className="bg-white p-3 rounded-2xl text-red-600 shadow-inner animate-pulse">
-                <AlertTriangle size={24} />
+          <div className="grid grid-cols-1 gap-6 animate-in slide-in-from-top-4 duration-700">
+            <div className="bg-white border-2 border-red-100 rounded-[32px] overflow-hidden shadow-2xl shadow-red-50 relative">
+              <div className="bg-red-600 p-6 flex items-center justify-between text-white relative">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <AlertOctagon size={80} />
+                </div>
+                <div className="flex items-center gap-4 relative z-10">
+                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md animate-pulse">
+                      <AlertTriangle size={24} />
+                   </div>
+                   <div>
+                      <h2 className="text-xl font-black uppercase tracking-tight">CRITICAL OVERDUE ACTION REQUIRED</h2>
+                      <p className="text-xs text-red-100 font-bold opacity-80 uppercase tracking-widest">Your attention is requested on {overdueLeads.length} stagnant leads</p>
+                   </div>
+                </div>
+                <Link to="/leads" className="bg-white text-red-600 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-xl shadow-red-900/20 relative z-10">
+                   Open Cockpit
+                </Link>
               </div>
-              <div>
-                <h4 className="font-black text-lg tracking-tight uppercase leading-none">{overdueLeads.length} CRITICAL OVERDUE NODES</h4>
-                <p className="text-xs text-red-100 font-bold mt-1 uppercase tracking-widest">Your pipeline is leaking. Immediate re-engagement required.</p>
+              
+              <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-red-50/30">
+                {overdueLeads.map(lead => (
+                  <Link 
+                    to="/leads" 
+                    key={lead.id} 
+                    className="bg-white p-5 rounded-2xl border border-red-100 hover:border-red-500 hover:shadow-lg transition-all group flex flex-col justify-between min-h-[140px]"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center font-black border border-red-100 group-hover:bg-red-600 group-hover:text-white transition-all">
+                          {lead.company.charAt(0)}
+                        </div>
+                        <span className="bg-red-100 text-red-700 text-[8px] font-black px-2 py-1 rounded uppercase tracking-[0.1em]">
+                          {Math.floor((today.getTime() - new Date(lead.nextFollowUp!).getTime()) / (1000 * 3600 * 24))} Days Late
+                        </span>
+                      </div>
+                      <h4 className="font-black text-slate-900 group-hover:text-red-600 transition-colors">{lead.company}</h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">{lead.name}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-red-50">
+                       <span className="text-sm font-black text-slate-900">{formatRupee(lead.value)}</span>
+                       <span className="text-[10px] font-black text-red-600 flex items-center gap-1 uppercase tracking-widest">
+                          Contact <ChevronRight size={14} />
+                       </span>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
-            <Link to="/leads" className="px-8 py-3 bg-white text-red-600 text-xs font-black rounded-xl hover:bg-slate-100 transition-all uppercase tracking-widest shadow-lg">Re-engage Now</Link>
           </div>
         )}
 
-        {todaysFollowUps.length > 0 && (
+        {todaysFollowUps.length > 0 && overdueLeads.length === 0 && (
           <div className="bg-brand-50 border border-brand-200 p-4 rounded-2xl flex items-center justify-between border-l-8 border-brand-500">
             <div className="flex items-center gap-4">
               <div className="bg-brand-500 p-2 rounded-full text-white"><Clock size={20} /></div>
