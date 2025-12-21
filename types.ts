@@ -51,7 +51,7 @@ export enum ServiceType {
 export enum LeadSource {
   WEBSITE = 'Website',
   WHATSAPP = 'WhatsApp',
-  COLD_CALL = 'Cold Call',
+  COLD_CALL = 'Phone Call',
   REFERRAL = 'Referral',
   ADS = 'Ads',
   DIRECT = 'Direct'
@@ -124,11 +124,13 @@ export enum TaskStatus {
   BLOCKED = 'Blocked'
 }
 
+export type TaskPriority = 'Low' | 'Medium' | 'High';
+
 export interface Task {
   id: string;
   title: string;
   assignee: string;
-  priority: string;
+  priority: TaskPriority;
   status: TaskStatus;
   dueDate?: string;
   projectTitle?: string;
