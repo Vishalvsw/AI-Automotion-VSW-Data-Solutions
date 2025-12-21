@@ -6,7 +6,8 @@ import {
   Shield, User as UserIcon, CheckSquare, Bell, Lock, 
   UserPlus, CheckCircle, XCircle, X, Trash2, Tag, 
   Plus, Edit2, IndianRupee, LayoutGrid, List, 
-  TrendingUp, BarChart3, Database, Coins, ArrowUpRight
+  TrendingUp, BarChart3, Database, Coins, ArrowUpRight,
+  Mail, Smartphone, BellRing, Zap
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -25,6 +26,10 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
   const [editingModule, setEditingModule] = useState<QuotationModule | null>(null);
   const [libraryView, setLibraryView] = useState<'grid' | 'ledger'>('grid');
   
+  // Notification Prefs State
+  const [emailEnabled, setEmailEnabled] = useState(true);
+  const [appNotifsEnabled, setAppNotifsEnabled] = useState(true);
+
   const [approvals, setApprovals] = useState([
     { id: 1, type: 'Invoice Approval', desc: 'Approve Invoice #INV-2024-002 for ₹12,50,000', requester: 'Karan (Finance)', status: 'Pending' },
     { id: 2, type: 'New Hire', desc: 'Approve Hiring of Sr. React Developer', requester: 'Priya (HR)', status: 'Pending' },
@@ -128,6 +133,7 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
         {[
           { id: 'users', label: 'Identity & Access' },
           { id: 'library', label: 'Solution Strategy' },
+          { id: 'notifs', label: 'Communications' },
           { id: 'approvals', label: 'Governance Queue' }
         ].map((tab) => (
           (tab.id !== 'approvals' || isAdmin) && (
@@ -198,7 +204,6 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
 
       {activeTab === 'library' && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-          {/* Catalog Intelligence Bar */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
              <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm">
                 <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">
@@ -310,6 +315,71 @@ const Settings: React.FC<SettingsProps> = ({ user: currentUser }) => {
                </table>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'notifs' && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+           <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden p-8 space-y-8">
+              <div>
+                <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Communication Protocol</h3>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">Automated BDA follow-up triggers and alert distribution.</p>
+              </div>
+
+              <div className="space-y-4">
+                 <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 transition-all">
+                    <div className="flex items-center gap-5">
+                       <div className="p-4 bg-brand-50 text-brand-600 rounded-2xl">
+                          <Mail size={24} />
+                       </div>
+                       <div>
+                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Email Reminders</h4>
+                          <p className="text-[10px] font-bold text-slate-400">Receive external alerts for approaching follow-up deadlines.</p>
+                       </div>
+                    </div>
+                    <button 
+                      onClick={() => setEmailEnabled(!emailEnabled)}
+                      className={`w-14 h-8 rounded-full relative transition-all duration-300 ${emailEnabled ? 'bg-brand-600' : 'bg-slate-200'}`}
+                    >
+                      <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 ${emailEnabled ? 'left-7' : 'left-1'}`}></div>
+                    </button>
+                 </div>
+
+                 <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 transition-all">
+                    <div className="flex items-center gap-5">
+                       <div className="p-4 bg-amber-50 text-amber-600 rounded-2xl">
+                          <BellRing size={24} />
+                       </div>
+                       <div>
+                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">App Notifications</h4>
+                          <p className="text-[10px] font-bold text-slate-400">Trigger real-time alerts within the OS command center.</p>
+                       </div>
+                    </div>
+                    <button 
+                      onClick={() => setAppNotifsEnabled(!appNotifsEnabled)}
+                      className={`w-14 h-8 rounded-full relative transition-all duration-300 ${appNotifsEnabled ? 'bg-brand-600' : 'bg-slate-200'}`}
+                    >
+                      <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 ${appNotifsEnabled ? 'left-7' : 'left-1'}`}></div>
+                    </button>
+                 </div>
+
+                 <div className="flex items-center justify-between p-6 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-125 transition-all">
+                       <Smartphone size={80} />
+                    </div>
+                    <div className="flex items-center gap-5 relative z-10">
+                       <div className="p-4 bg-white/10 text-white rounded-2xl">
+                          <Zap size={24} />
+                       </div>
+                       <div>
+                          <h4 className="text-sm font-black uppercase tracking-tight">High-Priority Sweep</h4>
+                          <p className="text-[10px] font-bold text-slate-400">Automated hourly scans for priority leakage detection.</p>
+                       </div>
+                    </div>
+                    <span className="bg-green-600 text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest relative z-10 animate-pulse">Running</span>
+                 </div>
+              </div>
+           </div>
         </div>
       )}
 

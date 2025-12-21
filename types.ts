@@ -4,6 +4,11 @@ export enum UserRole {
   BDA = 'BDA'
 }
 
+export interface UserPreferences {
+  emailNotifications: boolean;
+  appNotifications: boolean;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -12,6 +17,17 @@ export interface User {
   avatarUrl?: string;
   commissionRate?: number;
   phoneNumber?: string;
+  preferences?: UserPreferences;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'overdue' | 'approaching' | 'system';
+  date: string;
+  read: boolean;
+  leadId?: string;
 }
 
 export enum LeadStatus {

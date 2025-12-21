@@ -11,14 +11,20 @@ import Login from './pages/Login';
 import Marketing from './pages/Marketing';
 import Retention from './pages/Retention';
 import Settings from './pages/Settings';
-import Copilot from './components/Copilot'; // Import Copilot
+import Copilot from './components/Copilot';
+import NotificationCenter from './components/NotificationCenter'; // Added NotificationCenter
 import { User, UserRole } from './types';
 import { Menu, Bell, Search } from 'lucide-react';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 
 const AppContent: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false); // Notification center toggle
+  
+  // Use App context for notifications
+  const { notifications } = useApp();
+  const unreadNotifCount = notifications.filter(n => !n.read).length;
 
   const handleLogin = (selectedUser: User) => {
     setUser(selectedUser);
@@ -36,7 +42,7 @@ const AppContent: React.FC = () => {
 
   return (
     <Router>
-      <div className="flex h-screen bg-slate-50 overflow-hidden relative">
+      <div className="flex h-screen bg-slate-50 overflow-hidden relative text-slate-900">
         <div 
           className={`fixed inset-0 bg-gray-900/50 z-40 lg:hidden transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
           onClick={() => setSidebarOpen(false)}
@@ -45,7 +51,7 @@ const AppContent: React.FC = () => {
         <Sidebar role={user.role} onLogout={handleLogout} isOpen={sidebarOpen} />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8">
+          <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 relative z-[250]">
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setSidebarOpen(true)}
@@ -66,10 +72,20 @@ const AppContent: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
-                <Bell size={18} />
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white"></span>
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className={`relative p-2 rounded-full transition-all ${notifOpen ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                >
+                  <Bell size={18} />
+                  {unreadNotifCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 border-2 border-white rounded-full flex items-center justify-center animate-pulse">
+                    </span>
+                  )}
+                </button>
+                {notifOpen && <NotificationCenter onClose={() => setNotifOpen(false)} />}
+              </div>
+              
               <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                 <div className="text-right hidden sm:block">
                   <div className="text-xs font-bold text-slate-900 leading-none">{user.name}</div>
