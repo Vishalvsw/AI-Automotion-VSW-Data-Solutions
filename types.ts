@@ -29,6 +29,12 @@ export enum LeadStatus {
   CLOSED_LOST = 'Closed Lost'
 }
 
+export enum QuoteStatus {
+  DRAFT = 'Draft',
+  SENT = 'Sent',
+  APPROVED = 'Approved'
+}
+
 export enum LeadPriority {
   HOT = 'Hot',
   WARM = 'Warm',
@@ -89,6 +95,7 @@ export interface Lead {
   phone: string;
   value: number;
   status: LeadStatus;
+  quoteStatus?: QuoteStatus;
   source: LeadSource;
   priority: LeadPriority;
   lastContact: string;
@@ -153,6 +160,7 @@ export interface Project {
   title: string;
   client: string;
   status: ProjectStatus;
+  quoteStatus?: QuoteStatus;
   dueDate: string;
   financials: ProjectFinancials;
   techMilestones: TechMilestones;

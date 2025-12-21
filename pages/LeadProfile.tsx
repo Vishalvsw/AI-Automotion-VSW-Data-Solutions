@@ -2,13 +2,15 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { LeadStatus, LeadPriority, ActivityType, UserRole, User, Activity } from '../types';
+// Removed Type from local types import
+import { LeadStatus, LeadPriority, ActivityType, UserRole, User, Activity, QuoteStatus } from '../types';
 import { 
   ArrowLeft, Phone, Mail, Calendar, IndianRupee, Zap, Target, Sparkles, 
   MessageSquare, Send, Trash2, Edit3, CheckCircle, Clock, History, 
   Layers, Video, Download, ExternalLink, FileSpreadsheet, FileText, Plus, X, Printer, Copy, Loader2, User as UserIcon
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+// Correctly import Type from @google/genai for responseSchema configuration
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface LeadProfileProps {
   user: User;
@@ -24,6 +26,7 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
   
   // State: AI Outreach
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isMappingQuote, setIsMappingQuote] = useState(false);
   const [outreachType, setOutreachType] = useState<'whatsapp' | 'email'>('whatsapp');
   const [generatedScript, setGeneratedScript] = useState('');
   
@@ -52,10 +55,68 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
   const toggleModule = (moduleId: string) => {
     const nextIds = selectedModuleIds.includes(moduleId) ? selectedModuleIds.filter(id => id !== moduleId) : [...selectedModuleIds, moduleId];
     setSelectedModuleIds(nextIds);
-    updateLead(lead.id, { selectedModuleIds: nextIds });
+    updateLead(lead.id, { selectedModuleIds: nextIds, quoteStatus: QuoteStatus.DRAFT });
   };
 
-  // --- External Integrations ---
+  // --- Autonomous Quotation Logic ---
+  const mapQuotationNeural = async (note: string) => {
+    setIsMappingQuote(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const availableModules = modules.map(m => `${m.id}: ${m.name} (${m.description})`).join('\n');
+      
+      const prompt = `
+        Client Context: ${note}
+        Requirement Hub: ${lead.requirements?.serviceType}
+        Available Capability Nodes:
+        ${availableModules}
+
+        Task: Return ONLY a JSON array of Module IDs that should be enabled for this client based on their needs.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+        config: {
+          systemInstruction: "You are a VSW System Architect. You only respond with a JSON array of IDs.",
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        }
+      });
+
+      const mappedIds = JSON.parse(response.text || "[]");
+      if (mappedIds.length > 0) {
+        setSelectedModuleIds(mappedIds);
+        updateLead(lead.id, { selectedModuleIds: mappedIds, quoteStatus: QuoteStatus.DRAFT });
+      }
+    } catch (err) {
+      console.error("Neural mapping failed", err);
+    } finally {
+      setIsMappingQuote(false);
+    }
+  };
+
+  const handleAddActivity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newActivity: Activity = { ...activityFormData };
+    const updatedActivities = [newActivity, ...(lead.activities || [])];
+    const updates: any = { activities: updatedActivities };
+    if (activityFormData.nextFollowUp) updates.nextFollowUp = activityFormData.nextFollowUp;
+    
+    updateLead(lead.id, updates);
+    setIsActivityModalOpen(false);
+
+    // Auto-trigger quotation mapping if it's a discovery/requirement session
+    if (activityFormData.type === ActivityType.REQUIREMENTS) {
+      await mapQuotationNeural(activityFormData.note);
+    }
+
+    setActivityFormData({ date: new Date().toISOString().split('T')[0], type: ActivityType.COLD_CALL, note: '', nextFollowUp: '' });
+  };
+
   const scheduleMeet = () => {
     const title = `Discovery: VSW x ${lead.company}`;
     const start = new Date(); start.setDate(start.getDate() + 1); start.setHours(11,0,0);
@@ -70,17 +131,9 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
     window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const handlePrint = () => window.print();
-
-  const handleAddActivity = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newActivity: Activity = { ...activityFormData };
-    const updatedActivities = [newActivity, ...(lead.activities || [])];
-    const updates: any = { activities: updatedActivities };
-    if (activityFormData.nextFollowUp) updates.nextFollowUp = activityFormData.nextFollowUp;
-    updateLead(lead.id, updates);
-    setIsActivityModalOpen(false);
-    setActivityFormData({ date: new Date().toISOString().split('T')[0], type: ActivityType.COLD_CALL, note: '', nextFollowUp: '' });
+  const handlePrint = () => {
+    updateLead(lead.id, { quoteStatus: QuoteStatus.SENT });
+    window.print();
   };
 
   const generateOutreach = async () => {
@@ -102,6 +155,17 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
+      {/* QUOTATION MAPPING OVERLAY */}
+      {isMappingQuote && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[2000] bg-slate-900 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-8 duration-500 border border-white/20">
+           <Loader2 className="animate-spin text-brand-400" size={20} />
+           <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Intelligence Matrix</span>
+              <span className="text-xs font-black">Mapping Architecture from Discovery Notes...</span>
+           </div>
+        </div>
+      )}
+
       {/* HEADER COMMAND */}
       <div className="flex items-center justify-between print:hidden">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-400 hover:text-slate-900 font-black text-[10px] uppercase tracking-widest transition-all group">
@@ -125,6 +189,16 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">{lead.company}</h1>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{lead.name}</p>
+            
+            <div className="mt-6 flex justify-center gap-2">
+               <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-xl border ${
+                 lead.quoteStatus === QuoteStatus.SENT ? 'bg-green-50 text-green-600 border-green-100' : 
+                 lead.quoteStatus === QuoteStatus.DRAFT ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400'
+               }`}>
+                 Quote: {lead.quoteStatus || 'Not Started'}
+               </span>
+            </div>
+
             <div className="mt-8 pt-8 border-t border-slate-50 space-y-3">
                <div className="flex items-center gap-3 text-left">
                   <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400"><Mail size={14}/></div>
@@ -147,10 +221,6 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
                 <div className="flex items-center gap-3"><Video size={18} className="text-brand-600" /><span className="text-xs font-black text-brand-900 uppercase">Google Meet</span></div>
                 <ExternalLink size={14} className="text-brand-300" />
              </button>
-             <button onClick={() => window.location.href=`mailto:${lead.email}`} className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
-                <div className="flex items-center gap-3"><Mail size={18} className="text-slate-600" /><span className="text-xs font-black text-slate-900 uppercase">Office Email</span></div>
-                <ExternalLink size={14} className="text-slate-300" />
-             </button>
           </div>
 
           <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
@@ -161,7 +231,7 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
              <div className="space-y-6 relative pl-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
                 {sortedActivities.slice(0, 4).map((act, idx) => (
                    <div key={idx} className="relative">
-                      <div className="absolute -left-[19px] top-1 w-2.5 h-2.5 rounded-full bg-brand-500 border-2 border-white ring-4 ring-slate-50"></div>
+                      <div className={`absolute -left-[19px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white ring-4 ${act.type === ActivityType.REQUIREMENTS ? 'bg-purple-600 ring-purple-50' : 'bg-brand-500 ring-slate-50'}`}></div>
                       <div className="text-[8px] font-black text-slate-400 uppercase mb-1">{new Date(act.date).toLocaleDateString()}</div>
                       <div className="text-[11px] font-black text-slate-900">{act.type}</div>
                       <p className="text-[10px] text-slate-500 font-medium leading-relaxed mt-1 line-clamp-2">{act.note}</p>
@@ -235,7 +305,12 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
                     <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date</label><input type="date" required value={activityFormData.date} onChange={e => setActivityFormData({...activityFormData, date: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl font-black text-sm outline-none focus:ring-2 focus:ring-brand-500" /></div>
                     <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Type</label><select value={activityFormData.type} onChange={e => setActivityFormData({...activityFormData, type: e.target.value as any})} className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl font-black text-sm outline-none cursor-pointer appearance-none">{Object.values(ActivityType).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                  </div>
-                 <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Notes</label><textarea required rows={3} value={activityFormData.note} onChange={e => setActivityFormData({...activityFormData, note: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border-none rounded-[24px] font-bold text-sm outline-none focus:ring-2 focus:ring-brand-500 resize-none" placeholder="Details of interaction..."/></div>
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                     {activityFormData.type === ActivityType.REQUIREMENTS ? 'Discovery Notes (AI will map quote)' : 'Interaction Notes'}
+                   </label>
+                   <textarea required rows={3} value={activityFormData.note} onChange={e => setActivityFormData({...activityFormData, note: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border-none rounded-[24px] font-bold text-sm outline-none focus:ring-2 focus:ring-brand-500 resize-none" placeholder="Details of interaction..."/>
+                 </div>
                  <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Next Follow-up</label><input type="date" value={activityFormData.nextFollowUp} onChange={e => setActivityFormData({...activityFormData, nextFollowUp: e.target.value})} className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl font-black text-sm outline-none focus:ring-2 focus:ring-brand-500" /></div>
                  <div className="pt-4 flex gap-4"><button type="button" onClick={() => setIsActivityModalOpen(false)} className="flex-1 py-5 text-slate-400 font-black text-xs uppercase hover:bg-slate-50 rounded-2xl">Cancel</button><button type="submit" className="flex-[2] py-5 bg-slate-900 text-white font-black text-xs uppercase rounded-2xl shadow-xl shadow-slate-200">Append Log</button></div>
               </form>
@@ -249,7 +324,7 @@ const LeadProfile: React.FC<LeadProfileProps> = ({ user }) => {
            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden border border-white print:h-auto print:rounded-none print:shadow-none print:max-w-none">
               <div className="px-10 py-8 bg-slate-900 text-white flex justify-between items-center print:hidden">
                  <div className="flex items-center gap-4"><div className="w-12 h-12 bg-brand-600 rounded-2xl flex items-center justify-center"><FileText size={24} /></div><div><h2 className="text-xl font-black tracking-tight uppercase">Strategic Proposal Artifact</h2><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Generated: {new Date().toLocaleDateString()}</p></div></div>
-                 <div className="flex gap-3"><button onClick={handlePrint} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl"><Printer size={20}/></button><button onClick={() => setIsQuoteModalOpen(false)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl"><X size={20}/></button></div>
+                 <div className="flex gap-3"><button onClick={handlePrint} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl" title="Print to PDF"><Printer size={20}/></button><button onClick={() => setIsQuoteModalOpen(false)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl"><X size={20}/></button></div>
               </div>
               <div className="flex-1 overflow-y-auto p-16 space-y-12 bg-white print:p-8">
                  <div className="flex justify-between items-start border-b-4 border-slate-900 pb-10">

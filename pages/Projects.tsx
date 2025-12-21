@@ -1,7 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole, TaskStatus, Task } from '../types';
-import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo, Plus, Sparkles, User as UserIcon, Calendar } from 'lucide-react';
+// Added Link to imports from react-router-dom to fix missing reference error
+import { Link } from 'react-router-dom';
+import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole, TaskStatus, Task, QuoteStatus } from '../types';
+import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo, Plus, Sparkles, User as UserIcon, Calendar, Eye } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { MOCK_USERS } from '../services/mockData';
 
@@ -10,7 +12,7 @@ interface ProjectsProps {
 }
 
 const Projects: React.FC<ProjectsProps> = ({ user }) => {
-  const { projects, updateProject, addProject } = useApp();
+  const { projects, updateProject, addProject, leads } = useApp();
   const canEditFinance = user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE;
   const canManageNodes = user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE || user.role === UserRole.DEVELOPER || user.role === UserRole.DESIGNER;
   
@@ -33,28 +35,23 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   // Auto-assignment Logic
   const smartAssignment = useMemo(() => {
     const title = newTaskTitle.toLowerCase();
-    
     const rules = [
       { keywords: ['api', 'backend', 'database', 'server', 'logic', 'integration'], role: UserRole.DEVELOPER },
       { keywords: ['ui', 'ux', 'design', 'logo', 'frontend', 'layout', 'figma', 'css'], role: UserRole.DESIGNER },
       { keywords: ['sales', 'lead', 'client', 'meeting', 'requirements', 'bda'], role: UserRole.BDA }
     ];
-
     const matchedRule = rules.find(rule => rule.keywords.some(k => title.includes(k)));
     if (matchedRule) {
       const suggestedUser = MOCK_USERS.find(u => u.role === matchedRule.role);
       return suggestedUser ? suggestedUser.name : 'Unassigned';
     }
-    
     return 'Unassigned';
   }, [newTaskTitle]);
 
   const handleAddTask = (projectId: string) => {
     if (!newTaskTitle.trim()) return;
-    
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
-
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title: newTaskTitle,
@@ -63,29 +60,20 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
       status: TaskStatus.TODO,
       dueDate: newTaskDate || undefined
     };
-
     const updatedTasks = [...project.tasks, newTask];
     updateProject(projectId, { tasks: updatedTasks });
-    
-    // Sync local selected project if open
-    if (selectedProject?.id === projectId) {
-      setSelectedProject({ ...selectedProject, tasks: updatedTasks });
-    }
-
+    if (selectedProject?.id === projectId) setSelectedProject({ ...selectedProject, tasks: updatedTasks });
     setNewTaskTitle('');
     setNewTaskDate('');
   };
 
   const formatINR = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency', currency: 'INR', maximumFractionDigits: 0
-    }).format(amount);
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
   };
 
   const checkIsOverdue = (dateString?: string) => {
     if (!dateString) return false;
-    const today = new Date();
-    today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0,0,0,0);
     return new Date(dateString) < today;
   };
 
@@ -95,9 +83,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     if (!project) return;
     const newMilestones = { ...project.techMilestones, [milestone]: val };
     updateProject(id, { techMilestones: newMilestones });
-    if (selectedProject?.id === id) {
-      setSelectedProject({ ...selectedProject, techMilestones: newMilestones });
-    }
+    if (selectedProject?.id === id) setSelectedProject({ ...selectedProject, techMilestones: newMilestones });
   };
 
   const handleUpdateFinancials = (id: string, field: keyof ProjectFinancials, val: number) => {
@@ -105,29 +91,19 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     const project = projects.find(p => p.id === id);
     if (!project) return;
     const newFinancials = { ...project.financials, [field]: val };
-    
     newFinancials.totalPaid = (newFinancials.advance || 0) + (newFinancials.stage1 || 0) + (newFinancials.stage2 || 0) + (newFinancials.stage3 || 0);
     newFinancials.balance = newFinancials.totalPaid - newFinancials.total;
-
     updateProject(id, { financials: newFinancials });
-    if (selectedProject?.id === id) {
-      setSelectedProject({ ...selectedProject, financials: newFinancials });
-    }
+    if (selectedProject?.id === id) setSelectedProject({ ...selectedProject, financials: newFinancials });
   };
 
   const handleUpdateTaskStatus = (projectId: string, taskId: string, newStatus: TaskStatus) => {
     if (!canManageNodes) return;
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
-    
-    const updatedTasks = project.tasks.map(t => 
-      t.id === taskId ? { ...t, status: newStatus } : t
-    );
-    
+    const updatedTasks = project.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
     updateProject(projectId, { tasks: updatedTasks });
-    if (selectedProject?.id === projectId) {
-      setSelectedProject({ ...selectedProject, tasks: updatedTasks });
-    }
+    if (selectedProject?.id === projectId) setSelectedProject({ ...selectedProject, tasks: updatedTasks });
   };
 
   return (
@@ -159,27 +135,21 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     {col.title}
                   </h3>
                 </div>
-                
                 <div className="flex-1 px-4 pb-4 overflow-y-auto space-y-4 custom-scrollbar">
                   {projects.filter(p => p.status === col.id).map((project) => {
                     const overdue = (new Date(project.dueDate) < new Date() && project.status !== ProjectStatus.COMPLETED);
                     return (
-                      <div 
-                          key={project.id} 
-                          onClick={() => setSelectedProject(project)}
-                          className={`bg-white p-6 rounded-[24px] border cursor-pointer transition-all hover:-translate-y-1 group relative ${overdue ? 'border-red-200 shadow-xl shadow-red-100' : 'border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-300'}`}
-                      >
+                      <div key={project.id} onClick={() => setSelectedProject(project)} className={`bg-white p-6 rounded-[24px] border cursor-pointer transition-all hover:-translate-y-1 group relative ${overdue ? 'border-red-200 shadow-xl shadow-red-100' : 'border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-300'}`}>
                           <div className="mb-4">
                               <span className="text-[9px] font-black tracking-[0.2em] text-slate-400 uppercase">{project.client}</span>
                               <h4 className="text-sm font-black text-slate-900 mt-1 leading-snug">{project.title}</h4>
                           </div>
-                          
-                          <div className="grid grid-cols-6 gap-1 mb-4">
-                             {Object.entries(project.techMilestones).map(([key, val]) => (
-                               <div key={key} className={`h-1.5 rounded-full ${val ? 'bg-green-500' : 'bg-slate-100'}`} title={key}></div>
-                             ))}
+                          <div className="flex justify-between items-center mb-4">
+                             <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg ${project.quoteStatus === QuoteStatus.APPROVED ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>Quote: {project.quoteStatus || 'Draft'}</span>
+                             <div className="grid grid-cols-4 gap-1">
+                                {Object.values(project.techMilestones).slice(0,4).map((v, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full ${v ? 'bg-green-500' : 'bg-slate-100'}`}></div>)}
+                             </div>
                           </div>
-
                           <div className="flex items-center justify-between pt-4 border-t border-slate-50">
                               <div className="text-[10px] font-black text-slate-900">{formatINR(project.financials.total)}</div>
                               <div className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase ${project.financials.balance < 0 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
@@ -201,50 +171,53 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               <thead className="bg-slate-900 text-white text-[9px] font-black uppercase tracking-[0.2em] sticky top-0 z-20">
                 <tr>
                   <th className="px-6 py-5 border-r border-slate-800">Project / Node</th>
-                  <th className="px-4 py-5 border-r border-slate-800 text-center">Base</th>
-                  <th className="px-4 py-5 border-r border-slate-800 text-center">Total</th>
-                  <th className="px-4 py-5 border-r border-slate-800 text-center">Paid</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">Grand Total</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center bg-brand-600">Balance</th>
-                  <th className="px-4 py-5 border-r border-slate-800 text-center">Dmo</th>
+                  <th className="px-4 py-5 border-r border-slate-800 text-center">Quotation Hub</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center">FE</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center">BE</th>
                   <th className="px-6 py-5 text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {projects.map((p) => (
-                  <tr key={p.id} onClick={() => setSelectedProject(p)} className="hover:bg-slate-50/50 transition-colors cursor-pointer group">
-                    <td className="px-6 py-4 border-r border-slate-50">
-                       <div className="font-black text-slate-900 text-xs">{p.client}</div>
-                       <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{p.title}</div>
-                    </td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center font-bold text-slate-500">{formatINR(p.financials.basePrice)}</td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center font-black text-slate-900">{formatINR(p.financials.total)}</td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-black text-brand-600">{formatINR(p.financials.totalPaid)}</td>
-                    <td className={`px-4 py-4 border-r border-slate-50 text-center text-xs font-black ${p.financials.balance < 0 ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50'}`}>
-                       {formatINR(p.financials.balance)}
-                    </td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center">
-                       {p.techMilestones.demo ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
-                    </td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center">
-                       {p.techMilestones.frontend ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
-                    </td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center">
-                       {p.techMilestones.backend ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                       <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-                         p.status === ProjectStatus.DELIVERY ? 'bg-green-50 text-green-600' :
-                         p.status === ProjectStatus.PRODUCTION ? 'bg-blue-50 text-blue-600' :
-                         p.status === ProjectStatus.DROPPED ? 'bg-slate-50 text-slate-400' :
-                         'bg-slate-50 text-slate-500'
-                       }`}>
-                         {p.status}
-                       </span>
-                    </td>
-                  </tr>
-                ))}
+                {projects.map((p) => {
+                   const matchingLead = leads.find(l => l.company === p.client);
+                   const currentQuoteStatus = p.quoteStatus || matchingLead?.quoteStatus || QuoteStatus.DRAFT;
+                   return (
+                    <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td onClick={() => setSelectedProject(p)} className="px-6 py-4 border-r border-slate-50 cursor-pointer">
+                         <div className="font-black text-slate-900 text-xs">{p.client}</div>
+                         <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{p.title}</div>
+                      </td>
+                      <td className="px-4 py-4 border-r border-slate-50 text-center font-black text-slate-900">{formatINR(p.financials.total)}</td>
+                      <td className={`px-4 py-4 border-r border-slate-50 text-center text-xs font-black ${p.financials.balance < 0 ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50'}`}>
+                         {formatINR(p.financials.balance)}
+                      </td>
+                      <td className="px-4 py-4 border-r border-slate-50 text-center">
+                         <Link to={matchingLead ? `/leads/${matchingLead.id}` : '#'} className={`px-3 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                           currentQuoteStatus === QuoteStatus.APPROVED ? 'bg-green-600 text-white' : 
+                           currentQuoteStatus === QuoteStatus.SENT ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'
+                         }`}>
+                           <FileText size={10} /> {currentQuoteStatus}
+                         </Link>
+                      </td>
+                      <td className="px-4 py-4 border-r border-slate-50 text-center">
+                         {p.techMilestones.frontend ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
+                      </td>
+                      <td className="px-4 py-4 border-r border-slate-50 text-center">
+                         {p.techMilestones.backend ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                         <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+                           p.status === ProjectStatus.DELIVERY ? 'bg-green-50 text-green-600' :
+                           p.status === ProjectStatus.PRODUCTION ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-400'
+                         }`}>
+                           {p.status}
+                         </span>
+                      </td>
+                    </tr>
+                   );
+                })}
               </tbody>
             </table>
           </div>
@@ -261,47 +234,22 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                  </div>
                  <button onClick={() => setSelectedProject(null)} className="p-3 bg-white hover:bg-slate-100 rounded-2xl shadow-sm transition-all"><X size={24}/></button>
               </div>
-
               <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
                  <div className="space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><IndianRupee size={18} className="text-brand-600" /> Financial Flow</h3>
-                    {!canEditFinance && (
-                      <div className="p-4 bg-amber-50 text-amber-700 rounded-2xl border border-amber-100 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest mb-4">
-                        <Lock size={14} /> Read-only access for technical roles
-                      </div>
-                    )}
                     <div className="grid grid-cols-2 gap-4">
                        <div className="p-5 bg-slate-50 rounded-2xl">
                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Grand Total</label>
-                          <input 
-                            disabled={!canEditFinance}
-                            type="number" 
-                            className={`w-full bg-transparent border-none p-0 font-black text-lg outline-none ${canEditFinance ? 'text-slate-900' : 'text-slate-400'}`} 
-                            value={selectedProject.financials.total}
-                            onChange={(e) => handleUpdateFinancials(selectedProject.id, 'total', Number(e.target.value))}
-                          />
+                          <input disabled={!canEditFinance} type="number" className="w-full bg-transparent border-none p-0 font-black text-lg outline-none text-slate-900" value={selectedProject.financials.total} onChange={(e) => handleUpdateFinancials(selectedProject.id, 'total', Number(e.target.value))} />
                        </div>
                        <div className="p-5 bg-green-50 rounded-2xl">
                           <label className="text-[9px] font-black text-green-400 uppercase tracking-widest">Advance Paid</label>
-                          <input 
-                            disabled={!canEditFinance}
-                            type="number" 
-                            className={`w-full bg-transparent border-none p-0 font-black text-lg outline-none ${canEditFinance ? 'text-green-700' : 'text-green-400'}`} 
-                            value={selectedProject.financials.advance}
-                            onChange={(e) => handleUpdateFinancials(selectedProject.id, 'advance', Number(e.target.value))}
-                          />
+                          <input disabled={!canEditFinance} type="number" className="w-full bg-transparent border-none p-0 font-black text-lg outline-none text-green-700" value={selectedProject.financials.advance} onChange={(e) => handleUpdateFinancials(selectedProject.id, 'advance', Number(e.target.value))} />
                        </div>
                     </div>
                  </div>
-
                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                       <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                          <ListTodo size={18} className="text-brand-600" /> 
-                          Milestone Tasks & Deadlines
-                       </h3>
-                    </div>
-
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><ListTodo size={18} className="text-brand-600" /> Strategic Tasks</h3>
                     {canManageNodes && (
                       <div className="flex flex-col gap-3">
                         <div className="relative group">
@@ -313,111 +261,25 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                                 </div>
                               )}
                           </div>
-                          <input 
-                              value={newTaskTitle}
-                              onChange={(e) => setNewTaskTitle(e.target.value)}
-                              className="w-full pl-32 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-bold outline-none focus:bg-white focus:border-brand-500 transition-all"
-                              placeholder="Type 'Design homepage' or 'API setup'..."
-                          />
+                          <input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full pl-32 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-bold outline-none focus:bg-white focus:border-brand-500 transition-all" placeholder="Add task..." />
                         </div>
-                        <div className="flex gap-2">
-                           <div className="relative flex-1">
-                              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                              <input 
-                                type="date" 
-                                value={newTaskDate}
-                                onChange={(e) => setNewTaskDate(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-[10px] font-black uppercase outline-none focus:bg-white focus:border-brand-500 transition-all"
-                              />
-                           </div>
-                           <button 
-                              onClick={() => handleAddTask(selectedProject.id)}
-                              disabled={!newTaskTitle.trim()}
-                              className="px-6 bg-slate-900 text-white text-[10px] font-black uppercase rounded-xl transition-all hover:bg-slate-800 disabled:opacity-50"
-                           >
-                              Add Strategy
-                           </button>
-                        </div>
+                        <button onClick={() => handleAddTask(selectedProject.id)} disabled={!newTaskTitle.trim()} className="py-3 bg-slate-900 text-white text-[10px] font-black uppercase rounded-xl transition-all hover:bg-slate-800 disabled:opacity-50">Add Strategy</button>
                       </div>
                     )}
-
-                    <div className="space-y-3 pt-2">
-                       {selectedProject.tasks.length > 0 ? selectedProject.tasks.map((task) => {
-                         const overdue = checkIsOverdue(task.dueDate) && task.status !== TaskStatus.DONE;
-                         return (
-                           <div key={task.id} className={`p-4 bg-white border rounded-2xl flex items-center justify-between group hover:shadow-md transition-all ${overdue ? 'border-red-100 bg-red-50/20' : 'border-slate-100'}`}>
-                              <div className="flex-1">
-                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className={`text-xs font-black ${overdue ? 'text-red-700' : 'text-slate-900'}`}>{task.title}</span>
-                                    {task.dueDate && (
-                                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1 ${overdue ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
-                                        <Clock size={8} /> {task.dueDate}
-                                      </span>
-                                    )}
-                                 </div>
-                                 <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                                    <UserIcon size={10} className="text-brand-500" />
-                                    {task.assignee}
-                                 </div>
+                    <div className="space-y-3">
+                       {selectedProject.tasks.map((task) => (
+                           <div key={task.id} className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between">
+                              <div>
+                                 <div className="text-xs font-black text-slate-900">{task.title}</div>
+                                 <div className="text-[9px] text-slate-400 font-bold uppercase">{task.assignee}</div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                 {canManageNodes ? (
-                                   <select 
-                                     value={task.status}
-                                     onChange={(e) => handleUpdateTaskStatus(selectedProject.id, task.id, e.target.value as TaskStatus)}
-                                     className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-none outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer ${
-                                       task.status === TaskStatus.DONE ? 'bg-green-50 text-green-700' :
-                                       task.status === TaskStatus.BLOCKED ? 'bg-red-50 text-red-700' :
-                                       task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-700' :
-                                       'bg-slate-100 text-slate-600'
-                                     }`}
-                                   >
-                                      {Object.values(TaskStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                                   </select>
-                                 ) : (
-                                   <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                                     task.status === TaskStatus.DONE ? 'bg-green-50 text-green-700' :
-                                     task.status === TaskStatus.BLOCKED ? 'bg-red-50 text-red-700' :
-                                     task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-700' :
-                                     'bg-slate-100 text-slate-600'
-                                   }`}>
-                                      {task.status}
-                                   </span>
-                                 )}
-                              </div>
+                              <select value={task.status} onChange={(e) => handleUpdateTaskStatus(selectedProject.id, task.id, e.target.value as TaskStatus)} className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-none outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer bg-slate-100 text-slate-600">{Object.values(TaskStatus).map(s => <option key={s} value={s}>{s}</option>)}</select>
                            </div>
-                         );
-                       }) : (
-                         <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Strategic Tasks Defined</p>
-                         </div>
-                       )}
-                    </div>
-                 </div>
-
-                 <div className="space-y-4 pb-10">
-                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Server size={18} className="text-brand-600" /> Technical Architecture</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                       {Object.entries(selectedProject.techMilestones).map(([key, val]) => (
-                         <button 
-                            key={key}
-                            disabled={!canManageNodes}
-                            onClick={() => handleUpdateMilestone(selectedProject.id, key as any, !val)}
-                            className={`p-5 rounded-3xl border-2 transition-all flex items-center justify-between group ${val ? 'border-green-600 bg-green-50/50' : 'border-slate-100 bg-white hover:border-slate-200'} ${!canManageNodes && 'cursor-default'}`}
-                         >
-                            <span className={`text-xs font-black uppercase tracking-widest ${val ? 'text-green-700' : 'text-slate-400 group-hover:text-slate-600'}`}>{key}</span>
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${val ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-200'}`}>
-                               {val ? <Check size={14} /> : <Minus size={14} />}
-                            </div>
-                         </button>
                        ))}
                     </div>
                  </div>
               </div>
-
-              <div className="p-10 border-t border-slate-100 bg-white flex gap-4">
-                 <button onClick={() => setSelectedProject(null)} className="flex-1 py-5 border-2 border-slate-100 text-slate-500 font-black rounded-3xl text-sm uppercase tracking-widest hover:bg-slate-50 transition-all">Dismiss</button>
-              </div>
+              <div className="p-10 border-t border-slate-100 bg-white flex gap-4"><button onClick={() => setSelectedProject(null)} className="flex-1 py-5 border-2 border-slate-100 text-slate-500 font-black rounded-3xl text-sm uppercase tracking-widest hover:bg-slate-50 transition-all">Dismiss</button></div>
            </div>
         </div>
       )}
