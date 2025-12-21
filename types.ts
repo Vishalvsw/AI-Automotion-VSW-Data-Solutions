@@ -74,13 +74,22 @@ export interface QuotationModule {
   price: number;
 }
 
+export interface QuotationPlan {
+  name: string;
+  price: number;
+  timeline: string;
+  idealFor: string;
+  featureLevels: Record<string, string>; // moduleId -> "Basic", "Advanced", "Full", etc.
+}
+
 export interface Quotation {
   id: string;
   leadId: string;
-  modules: QuotationModule[];
-  totalAmount: number;
-  tax: number;
-  grandTotal: number;
+  projectOverview: string;
+  objective: string;
+  coreModules: QuotationModule[];
+  plans: QuotationPlan[];
+  benefits: string[];
   createdAt: string;
 }
 
