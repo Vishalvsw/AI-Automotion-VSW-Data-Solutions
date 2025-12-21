@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials } from '../types';
-// Fixed: Added IndianRupee to the lucide-react imports
-import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee } from 'lucide-react';
+import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole } from '../types';
+import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface ProjectsProps {
@@ -11,9 +10,10 @@ interface ProjectsProps {
 
 const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const { projects, updateProject, addProject } = useApp();
+  const isAdmin = user.role === UserRole.FOUNDER;
+  
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [viewMode, setViewMode] = useState<'kanban' | 'ledger'>('ledger');
-  const [isEditDetailsMode, setIsEditDetailsMode] = useState(false);
   
   const columns = [
     { id: ProjectStatus.REQUIREMENTS, title: 'Requirements', color: 'bg-purple-50 text-purple-700', icon: FileText },
@@ -33,6 +33,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const isOverdue = (dateString: string) => new Date(dateString) < new Date();
 
   const handleUpdateMilestone = (id: string, milestone: keyof TechMilestones, val: boolean) => {
+    if (!isAdmin) return;
     const project = projects.find(p => p.id === id);
     if (!project) return;
     const newMilestones = { ...project.techMilestones, [milestone]: val };
@@ -43,12 +44,13 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   };
 
   const handleUpdateFinancials = (id: string, field: keyof ProjectFinancials, val: number) => {
+    if (!isAdmin) return;
     const project = projects.find(p => p.id === id);
     if (!project) return;
     const newFinancials = { ...project.financials, [field]: val };
     
     // Recalculate totals
-    newFinancials.totalPaid = newFinancials.advance + newFinancials.stage1 + newFinancials.stage2 + newFinancials.stage3;
+    newFinancials.totalPaid = (newFinancials.advance || 0) + (newFinancials.stage1 || 0) + (newFinancials.stage2 || 0) + (newFinancials.stage3 || 0);
     newFinancials.balance = newFinancials.totalPaid - newFinancials.total;
 
     updateProject(id, { financials: newFinancials });
@@ -69,7 +71,9 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               <button onClick={() => setViewMode('kanban')} className={`p-2 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}><LayoutGrid size={18} /></button>
               <button onClick={() => setViewMode('ledger')} className={`p-2 rounded-lg transition-all ${viewMode === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}><Table size={18} /></button>
            </div>
-           <button className="px-6 py-3 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-700 transition-all shadow-xl shadow-brand-100">Deploy New Node</button>
+           {isAdmin && (
+             <button className="px-6 py-3 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-700 transition-all shadow-xl shadow-brand-100">Deploy New Node</button>
+           )}
         </div>
       </div>
 
@@ -83,9 +87,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     <col.icon size={14} />
                     {col.title}
                   </h3>
-                  <span className="text-[10px] font-black text-slate-400 bg-white px-2 py-1 rounded-lg border border-slate-100 shadow-sm">
-                    {projects.filter(p => p.status === col.id).length}
-                  </span>
                 </div>
                 
                 <div className="flex-1 px-4 pb-4 overflow-y-auto space-y-4 custom-scrollbar">
@@ -100,7 +101,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                           <div className="mb-4">
                               <span className="text-[9px] font-black tracking-[0.2em] text-slate-400 uppercase">{project.client}</span>
                               <h4 className="text-sm font-black text-slate-900 mt-1 leading-snug">{project.title}</h4>
-                              {project.notes && <p className="text-[10px] text-brand-600 font-bold mt-1 italic">"{project.notes}"</p>}
                           </div>
                           
                           <div className="grid grid-cols-6 gap-1 mb-4">
@@ -132,15 +132,11 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                   <th className="px-6 py-5 border-r border-slate-800">Project / Node</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center">Base</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center">Total</th>
-                  <th className="px-4 py-5 border-r border-slate-800 text-center">Adv.</th>
-                  <th className="px-4 py-5 border-r border-slate-800 text-center">S1</th>
-                  <th className="px-4 py-5 border-r border-slate-800 text-center">S2</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center">Paid</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center bg-brand-600">Balance</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center">Dmo</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center">FE</th>
                   <th className="px-4 py-5 border-r border-slate-800 text-center">BE</th>
-                  <th className="px-4 py-5 border-r border-slate-800 text-center">Dep</th>
                   <th className="px-6 py-5 text-center">Status</th>
                 </tr>
               </thead>
@@ -153,9 +149,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     </td>
                     <td className="px-4 py-4 border-r border-slate-50 text-center font-bold text-slate-500">{formatINR(p.financials.basePrice)}</td>
                     <td className="px-4 py-4 border-r border-slate-50 text-center font-black text-slate-900">{formatINR(p.financials.total)}</td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-bold text-green-600">{formatINR(p.financials.advance)}</td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-bold text-slate-500">{p.financials.stage1 > 0 ? formatINR(p.financials.stage1) : '—'}</td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-bold text-slate-500">{p.financials.stage2 > 0 ? formatINR(p.financials.stage2) : '—'}</td>
                     <td className="px-4 py-4 border-r border-slate-50 text-center text-xs font-black text-brand-600">{formatINR(p.financials.totalPaid)}</td>
                     <td className={`px-4 py-4 border-r border-slate-50 text-center text-xs font-black ${p.financials.balance < 0 ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50'}`}>
                        {formatINR(p.financials.balance)}
@@ -168,9 +161,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     </td>
                     <td className="px-4 py-4 border-r border-slate-50 text-center">
                        {p.techMilestones.backend ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
-                    </td>
-                    <td className="px-4 py-4 border-r border-slate-50 text-center">
-                       {p.techMilestones.deployment ? <Check size={16} className="text-green-500 mx-auto" /> : <Minus size={14} className="text-slate-200 mx-auto" />}
                     </td>
                     <td className="px-6 py-4 text-center">
                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
@@ -190,7 +180,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         </div>
       )}
 
-      {/* DETAIL DRAWER / OVERLAY */}
+      {/* DETAIL DRAWER */}
       {selectedProject && (
         <div className="fixed inset-0 z-[100] flex items-center justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
            <div className="w-full max-w-xl h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
@@ -203,23 +193,35 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
-                 {/* STRATEGIC CONTEXT */}
                  <div className="space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Globe size={18} className="text-brand-600" /> Operational Context</h3>
                     <div className="p-6 bg-brand-50 rounded-[32px] border border-brand-100">
-                       <p className="text-sm font-bold text-slate-700 italic">"{selectedProject.notes || 'No active operational notes.'}"</p>
+                       {isAdmin ? (
+                         <textarea 
+                           className="w-full bg-transparent border-none p-0 text-sm font-bold text-slate-700 focus:ring-0 outline-none resize-none"
+                           value={selectedProject.notes}
+                           onChange={(e) => updateProject(selectedProject.id, { notes: e.target.value })}
+                         />
+                       ) : (
+                         <p className="text-sm font-bold text-slate-700 italic">"{selectedProject.notes || 'No active operational notes.'}"</p>
+                       )}
                     </div>
                  </div>
 
-                 {/* FINANCIAL COMMAND */}
                  <div className="space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><IndianRupee size={18} className="text-brand-600" /> Financial Flow</h3>
+                    {!isAdmin && (
+                      <div className="p-4 bg-amber-50 text-amber-700 rounded-2xl border border-amber-100 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest mb-4">
+                        <Lock size={14} /> Read-only access for BDAs
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 gap-4">
                        <div className="p-5 bg-slate-50 rounded-2xl">
                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Grand Total</label>
                           <input 
+                            disabled={!isAdmin}
                             type="number" 
-                            className="w-full bg-transparent border-none p-0 font-black text-lg text-slate-900 outline-none" 
+                            className={`w-full bg-transparent border-none p-0 font-black text-lg outline-none ${isAdmin ? 'text-slate-900' : 'text-slate-400'}`} 
                             value={selectedProject.financials.total}
                             onChange={(e) => handleUpdateFinancials(selectedProject.id, 'total', Number(e.target.value))}
                           />
@@ -227,28 +229,11 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                        <div className="p-5 bg-green-50 rounded-2xl">
                           <label className="text-[9px] font-black text-green-400 uppercase tracking-widest">Advance Paid</label>
                           <input 
+                            disabled={!isAdmin}
                             type="number" 
-                            className="w-full bg-transparent border-none p-0 font-black text-lg text-green-700 outline-none" 
+                            className={`w-full bg-transparent border-none p-0 font-black text-lg outline-none ${isAdmin ? 'text-green-700' : 'text-green-400'}`} 
                             value={selectedProject.financials.advance}
                             onChange={(e) => handleUpdateFinancials(selectedProject.id, 'advance', Number(e.target.value))}
-                          />
-                       </div>
-                       <div className="p-5 bg-slate-50 rounded-2xl">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Stage 1</label>
-                          <input 
-                            type="number" 
-                            className="w-full bg-transparent border-none p-0 font-black text-lg text-slate-900 outline-none" 
-                            value={selectedProject.financials.stage1}
-                            onChange={(e) => handleUpdateFinancials(selectedProject.id, 'stage1', Number(e.target.value))}
-                          />
-                       </div>
-                       <div className="p-5 bg-slate-50 rounded-2xl">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Stage 2</label>
-                          <input 
-                            type="number" 
-                            className="w-full bg-transparent border-none p-0 font-black text-lg text-slate-900 outline-none" 
-                            value={selectedProject.financials.stage2}
-                            onChange={(e) => handleUpdateFinancials(selectedProject.id, 'stage2', Number(e.target.value))}
                           />
                        </div>
                     </div>
@@ -264,15 +249,15 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     </div>
                  </div>
 
-                 {/* TECH MILESTONES */}
                  <div className="space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Server size={18} className="text-brand-600" /> Technical Architecture</h3>
                     <div className="grid grid-cols-2 gap-4">
                        {Object.entries(selectedProject.techMilestones).map(([key, val]) => (
                          <button 
                             key={key}
+                            disabled={!isAdmin}
                             onClick={() => handleUpdateMilestone(selectedProject.id, key as any, !val)}
-                            className={`p-5 rounded-3xl border-2 transition-all flex items-center justify-between group ${val ? 'border-green-600 bg-green-50/50' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                            className={`p-5 rounded-3xl border-2 transition-all flex items-center justify-between group ${val ? 'border-green-600 bg-green-50/50' : 'border-slate-100 bg-white hover:border-slate-200'} ${!isAdmin && 'cursor-default'}`}
                          >
                             <span className={`text-xs font-black uppercase tracking-widest ${val ? 'text-green-700' : 'text-slate-400 group-hover:text-slate-600'}`}>{key}</span>
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${val ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-200'}`}>
@@ -282,36 +267,10 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                        ))}
                     </div>
                  </div>
-
-                 {/* PRODUCTION STATUS */}
-                 <div className="space-y-4">
-                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Monitor size={18} className="text-brand-600" /> Pipeline Control</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Node Status</label>
-                          <select 
-                            value={selectedProject.status} 
-                            onChange={(e) => updateProject(selectedProject.id, { status: e.target.value as any })}
-                            className="w-full p-4 bg-slate-50 border-none rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-brand-500"
-                          >
-                             {Object.values(ProjectStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                       </div>
-                       <div className="space-y-2">
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Delivery Date</label>
-                          <input 
-                            type="date" 
-                            className="w-full p-4 bg-slate-50 border-none rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-brand-500"
-                            value={selectedProject.dueDate}
-                            onChange={(e) => updateProject(selectedProject.id, { dueDate: e.target.value })}
-                          />
-                       </div>
-                    </div>
-                 </div>
               </div>
 
               <div className="p-10 border-t border-slate-100 bg-white flex gap-4">
-                 <button className="flex-1 py-5 bg-slate-900 text-white font-black rounded-3xl text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all">Archive Node</button>
+                 {isAdmin && <button className="flex-1 py-5 bg-slate-900 text-white font-black rounded-3xl text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all">Archive Node</button>}
                  <button onClick={() => setSelectedProject(null)} className="flex-1 py-5 border-2 border-slate-100 text-slate-500 font-black rounded-3xl text-sm uppercase tracking-widest hover:bg-slate-50 transition-all">Dismiss</button>
               </div>
            </div>

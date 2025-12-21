@@ -89,11 +89,11 @@ const AppContent: React.FC = () => {
                 <Route path="/" element={<Dashboard user={user} />} />
                 <Route path="/leads" element={<Leads user={user} />} />
                 <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/projects" element={isFounder ? <Projects user={user} /> : <Navigate to="/" />} />
+                <Route path="/projects" element={<Projects user={user} />} />
                 <Route path="/finance" element={isFounder ? <Finance /> : <Navigate to="/" />} />
                 <Route path="/marketing" element={isFounder ? <Marketing /> : <Navigate to="/" />} />
                 <Route path="/retention" element={isFounder ? <Retention /> : <Navigate to="/" />} />
-                <Route path="/settings" element={isFounder ? <Settings /> : <Navigate to="/" />} />
+                <Route path="/settings" element={<Settings user={user} />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </div>
