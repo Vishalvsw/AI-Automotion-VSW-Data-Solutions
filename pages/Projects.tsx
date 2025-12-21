@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole, TaskStatus, Task, QuoteStatus, TaskPriority } from '../types';
-import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo, Plus, Sparkles, User as UserIcon, Calendar, Eye, ChevronDown } from 'lucide-react';
+import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo, Plus, Sparkles, User as UserIcon, Calendar, Eye, ChevronDown, AlertCircle, Info } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { MOCK_USERS } from '../services/mockData';
 
@@ -21,6 +21,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   // New Task State
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDate, setNewTaskDate] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>('Medium');
   
   const columns = [
     { id: ProjectStatus.REQUIREMENTS, title: 'Requirements', color: 'bg-purple-50 text-purple-700', icon: FileText },
@@ -55,15 +56,18 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
       id: `task-${Date.now()}`,
       title: newTaskTitle,
       assignee: smartAssignment,
-      priority: 'Medium',
+      priority: newTaskPriority, // Uses user selected or default 'Medium'
       status: TaskStatus.TODO,
       dueDate: newTaskDate || undefined
     };
     const updatedTasks = [...project.tasks, newTask];
     updateProject(projectId, { tasks: updatedTasks });
     if (selectedProject?.id === projectId) setSelectedProject({ ...selectedProject, tasks: updatedTasks });
+    
+    // Reset Form
     setNewTaskTitle('');
     setNewTaskDate('');
+    setNewTaskPriority('Medium');
   };
 
   const formatINR = (amount: number) => {
@@ -105,6 +109,15 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
       case 'Medium': return 'text-amber-600 bg-amber-50 border-amber-100';
       case 'Low': return 'text-slate-500 bg-slate-50 border-slate-100';
       default: return 'text-slate-500 bg-slate-50 border-slate-100';
+    }
+  };
+
+  const getPriorityIcon = (priority: TaskPriority) => {
+    switch (priority) {
+      case 'High': return <AlertCircle size={14} />;
+      case 'Medium': return <Info size={14} />;
+      case 'Low': return <Clock size={14} />;
+      default: return null;
     }
   };
 
@@ -268,30 +281,63 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                        <span className="text-[10px] font-black text-slate-400 uppercase">{selectedProject.tasks.length} Modules</span>
                     </div>
                     {canManageNodes && (
-                      <div className="space-y-3">
-                        <div className="relative group">
-                          <div className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3 pointer-events-none">
-                              <Plus size={16} className="text-slate-300" />
-                          </div>
-                          <input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full pl-12 pr-6 py-4 sm:py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl sm:rounded-3xl text-sm font-bold outline-none focus:bg-white focus:border-brand-500 transition-all shadow-inner" placeholder="Inject task node..." />
+                      <div className="space-y-4 bg-slate-50/50 p-6 rounded-[32px] border border-slate-100">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                           <div className="relative group sm:col-span-2">
+                             <div className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3 pointer-events-none">
+                                 <Plus size={16} className="text-slate-300" />
+                             </div>
+                             <input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full pl-12 pr-6 py-4 bg-white border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-brand-500 transition-all shadow-sm" placeholder="Inject task node title..." />
+                           </div>
+                           
+                           <div className="relative">
+                              <select 
+                                 value={newTaskPriority}
+                                 onChange={(e) => setNewTaskPriority(e.target.value as TaskPriority)}
+                                 className="w-full pl-10 pr-8 py-3 bg-white border-2 border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:border-brand-500 appearance-none shadow-sm"
+                              >
+                                 <option value="High">High Priority</option>
+                                 <option value="Medium">Medium Priority</option>
+                                 <option value="Low">Low Priority</option>
+                              </select>
+                              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                 {getPriorityIcon(newTaskPriority)}
+                              </div>
+                              <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300" />
+                           </div>
+
+                           <div className="relative">
+                              <input 
+                                 type="date" 
+                                 value={newTaskDate} 
+                                 onChange={(e) => setNewTaskDate(e.target.value)} 
+                                 className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-[10px] font-black uppercase outline-none focus:border-brand-500 shadow-sm" 
+                              />
+                           </div>
                         </div>
-                        <button onClick={() => handleAddTask(selectedProject.id)} disabled={!newTaskTitle.trim()} className="w-full py-4 sm:py-5 bg-slate-900 text-white text-[10px] sm:text-[11px] font-black uppercase rounded-xl sm:rounded-[24px] transition-all hover:bg-slate-800 disabled:opacity-50 shadow-xl shadow-slate-200">Deploy Task Node</button>
+                        <button onClick={() => handleAddTask(selectedProject.id)} disabled={!newTaskTitle.trim()} className="w-full py-4 bg-slate-900 text-white text-[10px] sm:text-[11px] font-black uppercase rounded-2xl transition-all hover:bg-slate-800 disabled:opacity-50 shadow-xl shadow-slate-200">Deploy Module Node</button>
                       </div>
                     )}
                     <div className="space-y-3">
                        {selectedProject.tasks.map((task) => (
                            <div key={task.id} className="p-4 sm:p-5 bg-white border border-slate-100 rounded-2xl sm:rounded-3xl flex flex-col gap-3 sm:gap-4 shadow-sm hover:shadow-md transition-all">
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                 <div>
+                                 <div className="flex-1">
                                     <div className="text-sm font-black text-slate-900">{task.title}</div>
-                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-1">{task.assignee}</div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                       <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">{task.assignee}</span>
+                                       {task.dueDate && <span className="text-[9px] text-brand-600 font-black uppercase tracking-widest">• Due {task.dueDate}</span>}
+                                    </div>
                                  </div>
                                  <div className="flex items-center gap-2">
                                     <div className="relative flex-1 sm:flex-none">
+                                       <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-80">
+                                          {getPriorityIcon(task.priority)}
+                                       </div>
                                        <select 
                                           value={task.priority} 
                                           onChange={(e) => handleUpdateTaskPriority(selectedProject.id, task.id, e.target.value as TaskPriority)} 
-                                          className={`w-full sm:w-auto pl-3 pr-8 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border border-transparent outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer transition-all appearance-none ${getPriorityColor(task.priority)}`}
+                                          className={`w-full sm:w-auto pl-8 pr-8 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border border-transparent outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer transition-all appearance-none ${getPriorityColor(task.priority)}`}
                                        >
                                           <option value="High">High</option>
                                           <option value="Medium">Medium</option>
