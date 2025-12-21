@@ -1,5 +1,5 @@
 
-import { Lead, LeadStatus, Project, ProjectStatus, TaskStatus, Invoice, UserRole, User, MarketingCampaign, LeadSource } from '../types';
+import { Lead, LeadStatus, LeadPriority, Project, ProjectStatus, TaskStatus, Invoice, UserRole, User, MarketingCampaign, LeadSource } from '../types';
 
 const getDate = (diffDays: number) => {
   const date = new Date();
@@ -13,8 +13,9 @@ export const MOCK_USERS: User[] = [
 ];
 
 export const MOCK_LEADS: Lead[] = [
-  { id: 'l1', name: 'Satish', company: 'CNC-Satish', email: 'satish@cnc.com', phone: '9123456780', value: 16000, status: LeadStatus.CONTACTED, lastContact: getDate(-1), nextFollowUp: '2024-11-24', assignedTo: 'Sneha', score: 30, tags: ['Still not ready'], source: LeadSource.REFERRAL, priority: 'Cold' },
-  { id: 'l2', name: 'Shiva', company: 'CCTV Shiva - Bharath Digital', email: 'shiva@cctv.com', phone: '9123456781', value: 158000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 85, tags: ['WAITING FOR ADVANCE'], source: LeadSource.DIRECT, priority: 'Hot' },
+  // Fix: Use LeadPriority enum members instead of string literals to match Lead interface type.
+  { id: 'l1', name: 'Satish', company: 'CNC-Satish', email: 'satish@cnc.com', phone: '9123456780', value: 16000, status: LeadStatus.CONTACTED, lastContact: getDate(-1), nextFollowUp: '2024-11-24', assignedTo: 'Sneha', score: 30, tags: ['Still not ready'], source: LeadSource.REFERRAL, priority: LeadPriority.COLD },
+  { id: 'l2', name: 'Shiva', company: 'CCTV Shiva - Bharath Digital', email: 'shiva@cctv.com', phone: '9123456781', value: 158000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 85, tags: ['WAITING FOR ADVANCE'], source: LeadSource.DIRECT, priority: LeadPriority.HOT },
 ];
 
 export const MOCK_PROJECTS: Project[] = [

@@ -39,6 +39,12 @@ export enum LeadStatus {
   CLOSED_LOST = 'Closed Lost'
 }
 
+export enum LeadPriority {
+  HOT = 'Hot',
+  WARM = 'Warm',
+  COLD = 'Cold'
+}
+
 export enum ServiceType {
   SOFTWARE = 'Software Development',
   RECRUITMENT = 'Recruitment / HR',
@@ -118,7 +124,7 @@ export interface Lead {
   value: number;
   status: LeadStatus;
   source: LeadSource;
-  priority: 'Hot' | 'Warm' | 'Cold';
+  priority: LeadPriority;
   lastContact: string;
   nextFollowUp?: string;
   assignedTo: string;
