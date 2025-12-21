@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ServiceType, LeadSource, LeadStatus, Lead, ActivityType } from '../types';
+import { ServiceType, LeadSource, LeadStatus, Lead, ActivityType, LeadPriority } from '../types';
 import { CheckCircle, ChevronRight, Building, Phone, Mail, User as UserIcon, ShieldCheck, Zap, Target, IndianRupee, Share2 } from 'lucide-react';
 
 const Onboarding: React.FC = () => {
@@ -15,8 +15,8 @@ const Onboarding: React.FC = () => {
     name: '',
     email: '',
     phone: '',
-    source: LeadSource.WEBSITE, // Default to website for onboarding portal
-    priority: 'Warm' as 'Hot' | 'Warm' | 'Cold',
+    source: LeadSource.WEBSITE, 
+    priority: LeadPriority.WARM,
     serviceType: ServiceType.SOFTWARE,
     painPoints: '',
     timeline: 'Standard (1-3 months)',
@@ -154,9 +154,9 @@ const Onboarding: React.FC = () => {
                      <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Project Priority</label>
                         <select name="priority" value={formData.priority} onChange={handleInputChange} className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl font-bold text-sm focus:ring-2 focus:ring-brand-500 outline-none appearance-none cursor-pointer">
-                           <option value="Hot">🔥 Hot / Urgent</option>
-                           <option value="Warm">☀️ Warm / Standard</option>
-                           <option value="Cold">❄️ Cold / Discovery</option>
+                           <option value={LeadPriority.HOT}>🔥 Hot / Urgent</option>
+                           <option value={LeadPriority.WARM}>☀️ Warm / Standard</option>
+                           <option value={LeadPriority.COLD}>❄️ Cold / Discovery</option>
                         </select>
                      </div>
                   </div>
@@ -199,7 +199,7 @@ const Onboarding: React.FC = () => {
                         <div className="font-black text-slate-900">{formData.name}</div>
                         <div className="text-slate-400 font-bold uppercase text-[10px]">Sales Priority</div>
                         <div className="font-black text-slate-900 flex items-center gap-2">
-                           {formData.priority === 'Hot' ? '🔥' : formData.priority === 'Warm' ? '☀️' : '❄️'} {formData.priority}
+                           {formData.priority === LeadPriority.HOT ? '🔥' : formData.priority === LeadPriority.WARM ? '☀️' : '❄️'} {formData.priority}
                         </div>
                         <div className="text-slate-400 font-bold uppercase text-[10px]">Architecture Service</div>
                         <div className="font-black text-slate-900">{formData.serviceType}</div>
