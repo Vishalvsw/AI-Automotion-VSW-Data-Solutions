@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole, TaskStatus } from '../types';
-import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo, Plus, Sparkles, User as UserIcon } from 'lucide-react';
+import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole, TaskStatus, Task } from '../types';
+import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo, Plus, Sparkles, User as UserIcon, Calendar } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { MOCK_USERS } from '../services/mockData';
 
@@ -19,6 +19,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   
   // New Task State
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDate, setNewTaskDate] = useState('');
   
   const columns = [
     { id: ProjectStatus.REQUIREMENTS, title: 'Requirements', color: 'bg-purple-50 text-purple-700', icon: FileText },
@@ -54,12 +55,13 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
-    const newTask = {
+    const newTask: Task = {
       id: `task-${Date.now()}`,
       title: newTaskTitle,
       assignee: smartAssignment,
       priority: 'Medium',
-      status: TaskStatus.TODO
+      status: TaskStatus.TODO,
+      dueDate: newTaskDate || undefined
     };
 
     const updatedTasks = [...project.tasks, newTask];
@@ -71,6 +73,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     }
 
     setNewTaskTitle('');
+    setNewTaskDate('');
   };
 
   const formatINR = (amount: number) => {
@@ -79,7 +82,12 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     }).format(amount);
   };
 
-  const isOverdue = (dateString: string) => new Date(dateString) < new Date();
+  const checkIsOverdue = (dateString?: string) => {
+    if (!dateString) return false;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return new Date(dateString) < today;
+  };
 
   const handleUpdateMilestone = (id: string, milestone: keyof TechMilestones, val: boolean) => {
     if (!canManageNodes) return;
@@ -108,7 +116,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   };
 
   const handleUpdateTaskStatus = (projectId: string, taskId: string, newStatus: TaskStatus) => {
-    // Only Founder, Finance or assigned user can update status (for simplicity we allow all management roles here)
     if (!canManageNodes) return;
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
@@ -155,7 +162,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                 
                 <div className="flex-1 px-4 pb-4 overflow-y-auto space-y-4 custom-scrollbar">
                   {projects.filter(p => p.status === col.id).map((project) => {
-                    const overdue = isOverdue(project.dueDate) && project.status !== ProjectStatus.COMPLETED;
+                    const overdue = (new Date(project.dueDate) < new Date() && project.status !== ProjectStatus.COMPLETED);
                     return (
                       <div 
                           key={project.id} 
@@ -206,7 +213,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {projects.map((p) => (
-                  <tr key={p.id} onClick={() => setSelectedProject(p)} className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                  <tr key={p.id} onClick={() => setSelectedProject(p)} className="hover:bg-slate-50/50 transition-colors cursor-pointer group">
                     <td className="px-6 py-4 border-r border-slate-50">
                        <div className="font-black text-slate-900 text-xs">{p.client}</div>
                        <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{p.title}</div>
@@ -256,7 +263,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
-                 {/* Financial Flow */}
                  <div className="space-y-4">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><IndianRupee size={18} className="text-brand-600" /> Financial Flow</h3>
                     {!canEditFinance && (
@@ -288,85 +294,100 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     </div>
                  </div>
 
-                 {/* MILESTONE TASKS with Smart Auto-Assign */}
                  <div className="space-y-4">
                     <div className="flex justify-between items-center">
                        <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
                           <ListTodo size={18} className="text-brand-600" /> 
-                          Milestone Tasks
+                          Milestone Tasks & Deadlines
                        </h3>
                     </div>
 
                     {canManageNodes && (
-                      <div className="relative group">
-                         <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                            <Plus size={16} className="text-slate-300" />
-                            {newTaskTitle && smartAssignment !== 'Unassigned' && (
-                              <div className="bg-brand-50 text-brand-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase flex items-center gap-1 animate-in zoom-in">
-                                <Sparkles size={10} /> {smartAssignment}
-                              </div>
-                            )}
-                         </div>
-                         <input 
-                            value={newTaskTitle}
-                            onChange={(e) => setNewTaskTitle(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddTask(selectedProject.id)}
-                            className="w-full pl-32 pr-20 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-bold outline-none focus:bg-white focus:border-brand-500 transition-all"
-                            placeholder="Type 'Design homepage' or 'API setup'..."
-                         />
-                         <button 
-                            onClick={() => handleAddTask(selectedProject.id)}
-                            className={`absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase rounded-xl transition-all ${newTaskTitle ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                         >
-                            Add
-                         </button>
+                      <div className="flex flex-col gap-3">
+                        <div className="relative group">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                              <Plus size={16} className="text-slate-300" />
+                              {newTaskTitle && smartAssignment !== 'Unassigned' && (
+                                <div className="bg-brand-50 text-brand-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase flex items-center gap-1 animate-in zoom-in">
+                                  <Sparkles size={10} /> {smartAssignment}
+                                </div>
+                              )}
+                          </div>
+                          <input 
+                              value={newTaskTitle}
+                              onChange={(e) => setNewTaskTitle(e.target.value)}
+                              className="w-full pl-32 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-bold outline-none focus:bg-white focus:border-brand-500 transition-all"
+                              placeholder="Type 'Design homepage' or 'API setup'..."
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                           <div className="relative flex-1">
+                              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                              <input 
+                                type="date" 
+                                value={newTaskDate}
+                                onChange={(e) => setNewTaskDate(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-[10px] font-black uppercase outline-none focus:bg-white focus:border-brand-500 transition-all"
+                              />
+                           </div>
+                           <button 
+                              onClick={() => handleAddTask(selectedProject.id)}
+                              disabled={!newTaskTitle.trim()}
+                              className="px-6 bg-slate-900 text-white text-[10px] font-black uppercase rounded-xl transition-all hover:bg-slate-800 disabled:opacity-50"
+                           >
+                              Add Strategy
+                           </button>
+                        </div>
                       </div>
                     )}
 
                     <div className="space-y-3 pt-2">
-                       {selectedProject.tasks.length > 0 ? selectedProject.tasks.map((task) => (
-                         <div key={task.id} className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between group hover:shadow-md transition-all">
-                            <div className="flex-1">
-                               <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-xs font-black text-slate-900">{task.title}</span>
-                                  <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                                    task.priority === 'High' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'
-                                  }`}>
-                                    {task.priority}
-                                  </span>
-                               </div>
-                               <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                                  <UserIcon size={10} className="text-brand-500" />
-                                  {task.assignee}
-                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                               {canManageNodes ? (
-                                 <select 
-                                   value={task.status}
-                                   onChange={(e) => handleUpdateTaskStatus(selectedProject.id, task.id, e.target.value as TaskStatus)}
-                                   className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-none outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer ${
+                       {selectedProject.tasks.length > 0 ? selectedProject.tasks.map((task) => {
+                         const overdue = checkIsOverdue(task.dueDate) && task.status !== TaskStatus.DONE;
+                         return (
+                           <div key={task.id} className={`p-4 bg-white border rounded-2xl flex items-center justify-between group hover:shadow-md transition-all ${overdue ? 'border-red-100 bg-red-50/20' : 'border-slate-100'}`}>
+                              <div className="flex-1">
+                                 <div className="flex items-center gap-2 mb-1">
+                                    <span className={`text-xs font-black ${overdue ? 'text-red-700' : 'text-slate-900'}`}>{task.title}</span>
+                                    {task.dueDate && (
+                                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1 ${overdue ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
+                                        <Clock size={8} /> {task.dueDate}
+                                      </span>
+                                    )}
+                                 </div>
+                                 <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                                    <UserIcon size={10} className="text-brand-500" />
+                                    {task.assignee}
+                                 </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 {canManageNodes ? (
+                                   <select 
+                                     value={task.status}
+                                     onChange={(e) => handleUpdateTaskStatus(selectedProject.id, task.id, e.target.value as TaskStatus)}
+                                     className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-none outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer ${
+                                       task.status === TaskStatus.DONE ? 'bg-green-50 text-green-700' :
+                                       task.status === TaskStatus.BLOCKED ? 'bg-red-50 text-red-700' :
+                                       task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-700' :
+                                       'bg-slate-100 text-slate-600'
+                                     }`}
+                                   >
+                                      {Object.values(TaskStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                                   </select>
+                                 ) : (
+                                   <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
                                      task.status === TaskStatus.DONE ? 'bg-green-50 text-green-700' :
                                      task.status === TaskStatus.BLOCKED ? 'bg-red-50 text-red-700' :
                                      task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-700' :
                                      'bg-slate-100 text-slate-600'
-                                   }`}
-                                 >
-                                    {Object.values(TaskStatus).map(s => <option key={s} value={s}>{s}</option>)}
-                                 </select>
-                               ) : (
-                                 <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                                   task.status === TaskStatus.DONE ? 'bg-green-50 text-green-700' :
-                                   task.status === TaskStatus.BLOCKED ? 'bg-red-50 text-red-700' :
-                                   task.status === TaskStatus.IN_PROGRESS ? 'bg-blue-50 text-blue-700' :
-                                   'bg-slate-100 text-slate-600'
-                                 }`}>
-                                    {task.status}
-                                 </span>
-                               )}
-                            </div>
-                         </div>
-                       )) : (
+                                   }`}>
+                                      {task.status}
+                                   </span>
+                                 )}
+                              </div>
+                           </div>
+                         );
+                       }) : (
                          <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Strategic Tasks Defined</p>
                          </div>
@@ -374,7 +395,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     </div>
                  </div>
 
-                 {/* Technical Architecture */}
                  <div className="space-y-4 pb-10">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><Server size={18} className="text-brand-600" /> Technical Architecture</h3>
                     <div className="grid grid-cols-2 gap-4">

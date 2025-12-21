@@ -1,15 +1,13 @@
 
+// @google/genai types are imported where needed in components.
+// Internal application types.
+
 export enum UserRole {
   FOUNDER = 'FOUNDER',
   FINANCE = 'FINANCE',
   BDA = 'BDA',
   DEVELOPER = 'DEVELOPER',
   DESIGNER = 'DESIGNER'
-}
-
-export interface UserPreferences {
-  emailNotifications: boolean;
-  appNotifications: boolean;
 }
 
 export interface User {
@@ -20,17 +18,6 @@ export interface User {
   avatarUrl?: string;
   commissionRate?: number;
   phoneNumber?: string;
-  preferences?: UserPreferences;
-}
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'overdue' | 'approaching' | 'system';
-  date: string;
-  read: boolean;
-  leadId?: string;
 }
 
 export enum LeadStatus {
@@ -61,35 +48,30 @@ export enum LeadSource {
   COLD_CALL = 'Cold Call',
   REFERRAL = 'Referral',
   ADS = 'Ads',
-  DIRECT = 'Direct',
-  VISIT = 'Visit',
-  OUTBOUND = 'Outbound',
-  INBOUND = 'Inbound'
+  DIRECT = 'Direct'
 }
 
 export enum ActivityType {
-  COLD_CALL = 'Cold Call',
-  COLD_MESSAGE = 'WhatsApp Message',
-  EMAIL = 'Email',
+  COLD_CALL = 'Phone Call',
+  EMAIL = 'Official Email',
   MEETING = 'Client Meeting',
-  QUOTATION = 'Quotation Sent',
-  REQUIREMENTS = 'Requirement Gathering'
+  WHATSAPP = 'WhatsApp Message',
+  QUOTATION = 'Quotation Delivery',
+  REQUIREMENTS = 'Discovery Session'
+}
+
+export interface Activity {
+  type: ActivityType;
+  date: string;
+  note: string;
+  nextFollowUp?: string;
 }
 
 export interface Requirement {
   serviceType: ServiceType;
   details: any; 
   painPoints: string[];
-  proposedSolutions: string[];
-}
-
-export interface Meeting {
-  id: string;
-  date: string;
-  time: string;
-  type: 'Discovery' | 'Demo' | 'Negotiation';
-  notes: string;
-  outcome: string;
+  proposedSolutions?: string[];
 }
 
 export interface QuotationModule {
@@ -97,25 +79,6 @@ export interface QuotationModule {
   name: string;
   description: string;
   price: number;
-}
-
-export interface QuotationPlan {
-  name: string;
-  price: number;
-  timeline: string;
-  idealFor: string;
-  featureLevels: Record<string, string>;
-}
-
-export interface Quotation {
-  id: string;
-  leadId: string;
-  projectOverview: string;
-  objective: string;
-  coreModules: QuotationModule[];
-  plans: QuotationPlan[];
-  benefits: string[];
-  createdAt: string;
 }
 
 export interface Lead {
@@ -132,11 +95,10 @@ export interface Lead {
   nextFollowUp?: string;
   assignedTo: string;
   requirements?: Requirement;
-  meetings?: Meeting[];
-  activities?: { type: ActivityType; date: string; note: string }[];
+  activities?: Activity[];
+  selectedModuleIds?: string[];
   score?: number;
   tags?: string[];
-  selectedModuleIds?: string[];
 }
 
 export enum ProjectStatus {
@@ -144,15 +106,35 @@ export enum ProjectStatus {
   PRODUCTION = 'In Progress',
   DELIVERY = 'Ready',
   COMPLETED = 'Completed',
-  RETAINER = 'Retainer/Support',
+  RETAINER = 'Retainer',
   DROPPED = 'Dropped'
 }
 
 export enum TaskStatus {
-  TODO = 'To Do',
+  TODO = 'Todo',
   IN_PROGRESS = 'In Progress',
-  BLOCKED = 'Blocked',
-  DONE = 'Done'
+  DONE = 'Done',
+  BLOCKED = 'Blocked'
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  assignee: string;
+  priority: string;
+  status: TaskStatus;
+  dueDate?: string;
+  projectTitle?: string;
+  client?: string;
+}
+
+export interface TechMilestones {
+  demo: boolean;
+  frontend: boolean;
+  backend: boolean;
+  deployment: boolean;
+  domain: boolean;
+  api: boolean;
 }
 
 export interface ProjectFinancials {
@@ -166,26 +148,17 @@ export interface ProjectFinancials {
   balance: number;
 }
 
-export interface TechMilestones {
-  demo: boolean;
-  frontend: boolean;
-  backend: boolean;
-  deployment: boolean;
-  domain: boolean;
-  api: boolean;
-}
-
 export interface Project {
   id: string;
   title: string;
   client: string;
   status: ProjectStatus;
-  notes: string;
   dueDate: string;
-  progress: number;
   financials: ProjectFinancials;
   techMilestones: TechMilestones;
-  tasks: { id: string; title: string; assignee: string; priority: string; status: TaskStatus }[];
+  tasks: Task[];
+  notes?: string;
+  progress?: number;
 }
 
 export interface Invoice {
@@ -203,4 +176,13 @@ export interface MarketingCampaign {
   status: string;
   budget: number;
   leadsGenerated: number;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+  type: 'overdue' | 'approaching' | 'info';
 }

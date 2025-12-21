@@ -17,7 +17,7 @@ export const MOCK_USERS: User[] = [
 
 export const MOCK_LEADS: Lead[] = [
   { id: 'l1', name: 'Satish', company: 'CNC-Satish', email: 'satish@cnc.com', phone: '9123456780', value: 16000, status: LeadStatus.CONTACTED, lastContact: getDate(-1), nextFollowUp: '2024-11-24', assignedTo: 'Sneha', score: 30, tags: ['Still not ready'], source: LeadSource.REFERRAL, priority: LeadPriority.COLD },
-  { id: 'l2', name: 'Shiva', company: 'CCTV Shiva - Bharath Digital', email: 'shiva@cctv.com', phone: '9123456781', value: 158000, status: LeadStatus.PROPOSAL_SENT, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 85, tags: ['WAITING FOR ADVANCE'], source: LeadSource.DIRECT, priority: LeadPriority.HOT },
+  { id: 'l2', name: 'Shiva', company: 'CCTV Shiva - Bharath Digital', email: 'shiva@cctv.com', phone: '9123456781', value: 158000, status: LeadStatus.CLOSED_WON, lastContact: getDate(-1), nextFollowUp: getDate(2), assignedTo: 'Sneha', score: 85, tags: ['WAITING FOR ADVANCE'], source: LeadSource.DIRECT, priority: LeadPriority.HOT },
 ];
 
 export const MOCK_PROJECTS: Project[] = [
@@ -32,8 +32,8 @@ export const MOCK_PROJECTS: Project[] = [
     financials: { basePrice: 15000, total: 18000, advance: 3000, stage1: 0, stage2: 0, stage3: 0, totalPaid: 3000, balance: -15000 },
     techMilestones: { demo: true, frontend: false, backend: false, deployment: false, domain: false, api: false },
     tasks: [
-      { id: 't1', title: 'Database Schema Design', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.DONE },
-      { id: 't2', title: 'Attendance Module UI', assignee: 'Priya (Designer)', priority: 'Medium', status: TaskStatus.IN_PROGRESS }
+      { id: 't1', title: 'Database Schema Design', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.DONE, dueDate: getDate(-1) },
+      { id: 't2', title: 'Attendance Module UI', assignee: 'Priya (Designer)', priority: 'Medium', status: TaskStatus.IN_PROGRESS, dueDate: getDate(1) }
     ] 
   },
   { 
@@ -47,8 +47,8 @@ export const MOCK_PROJECTS: Project[] = [
     financials: { basePrice: 122000, total: 122000, advance: 24600, stage1: 25000, stage2: 0, stage3: 0, totalPaid: 49600, balance: -72400 },
     techMilestones: { demo: true, frontend: true, backend: true, deployment: false, domain: false, api: false },
     tasks: [
-      { id: 't3', title: 'Vendor Dashboard API', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.DONE },
-      { id: 't4', title: 'Payment Gateway Integration', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.IN_PROGRESS }
+      { id: 't3', title: 'Vendor Dashboard API', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.DONE, dueDate: getDate(-5) },
+      { id: 't4', title: 'Payment Gateway Integration', assignee: 'Rahul (Dev)', priority: 'High', status: TaskStatus.IN_PROGRESS, dueDate: getDate(0) }
     ] 
   },
   { 
@@ -62,7 +62,7 @@ export const MOCK_PROJECTS: Project[] = [
     financials: { basePrice: 160000, total: 160000, advance: 0, stage1: 0, stage2: 0, stage3: 0, totalPaid: 0, balance: -160000 },
     techMilestones: { demo: false, frontend: false, backend: false, deployment: false, domain: false, api: false },
     tasks: [
-      { id: 't5', title: 'Requirement Gathering', assignee: 'Sneha (BDA)', priority: 'High', status: TaskStatus.IN_PROGRESS }
+      { id: 't5', title: 'Requirement Gathering', assignee: 'Sneha (BDA)', priority: 'High', status: TaskStatus.IN_PROGRESS, dueDate: getDate(2) }
     ] 
   },
 ];
