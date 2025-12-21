@@ -11,8 +11,7 @@ import Login from './pages/Login';
 import Marketing from './pages/Marketing';
 import Retention from './pages/Retention';
 import Settings from './pages/Settings';
-import Copilot from './components/Copilot';
-import NotificationCenter from './components/NotificationCenter'; // Added NotificationCenter
+import NotificationCenter from './components/NotificationCenter'; 
 import { User, UserRole } from './types';
 import { Menu, Bell, Search } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext';
@@ -20,9 +19,8 @@ import { AppProvider, useApp } from './context/AppContext';
 const AppContent: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false); // Notification center toggle
+  const [notifOpen, setNotifOpen] = useState(false); 
   
-  // Use App context for notifications
   const { notifications } = useApp();
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
@@ -116,9 +114,6 @@ const AppContent: React.FC = () => {
             </div>
           </main>
         </div>
-        
-        {/* Global AI Copilot */}
-        <Copilot user={user} />
       </div>
     </Router>
   );
