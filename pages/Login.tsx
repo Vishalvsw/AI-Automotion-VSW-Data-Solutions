@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, User } from '../types';
 import { MOCK_USERS } from '../services/mockData';
-import { Smartphone, ArrowRight, ShieldCheck, User as UserIcon, Mail, Loader2, Briefcase, Zap, IndianRupee, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { Smartphone, ArrowRight, ShieldCheck, User as UserIcon, Mail, Loader2, Briefcase, Zap, IndianRupee, ChevronLeft, CheckCircle2, Shield, Coins, Users as UsersIcon } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -85,6 +85,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }, 1500);
   };
 
+  // Quick Access Helper
+  const handleQuickLogin = (num: string) => {
+    setPhoneNumber(num);
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      setStep('OTP');
+      // Autofill OTP for quick demo access
+      setOtp(['1', '2', '3', '4']);
+    }, 800);
+  };
+
   // Auto-verify when all digits are filled
   useEffect(() => {
     if (otp.every(digit => digit !== '') && step === 'OTP') {
@@ -137,28 +149,62 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
 
         {step === 'PHONE' && (
-          <form onSubmit={handleSendOtp} className="text-left space-y-6">
-            <div className="space-y-3">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Work Mobile Network</label>
-              <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-black pr-3 border-r-2 border-slate-100 text-sm">
-                  +91
+          <div className="space-y-10 animate-in fade-in duration-500">
+            <form onSubmit={handleSendOtp} className="text-left space-y-6">
+              <div className="space-y-3">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Work Mobile Network</label>
+                <div className="relative group">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-black pr-3 border-r-2 border-slate-100 text-sm">
+                    +91
+                  </div>
+                  <input
+                    type="tel"
+                    autoFocus
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    className="w-full pl-20 pr-6 py-5 border-2 border-slate-50 rounded-[24px] bg-slate-50 text-slate-900 font-black text-lg focus:bg-white focus:border-brand-500 outline-none transition-all shadow-inner"
+                    placeholder="9876543210"
+                  />
                 </div>
-                <input
-                  type="tel"
-                  autoFocus
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  className="w-full pl-20 pr-6 py-5 border-2 border-slate-50 rounded-[24px] bg-slate-50 text-slate-900 font-black text-lg focus:bg-white focus:border-brand-500 outline-none transition-all shadow-inner"
-                  placeholder="9876543210"
-                />
+              </div>
+              {error && <div className="text-red-500 text-[11px] font-black text-center animate-bounce">{error}</div>}
+              <button type="submit" disabled={isLoading} className="w-full bg-slate-900 text-white font-black py-5 rounded-[24px] hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-slate-200 disabled:opacity-50">
+                {isLoading ? <Loader2 className="animate-spin" size={20} /> : <>Generate OTP <ArrowRight size={18} /></>}
+              </button>
+            </form>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1 bg-slate-100"></div>
+                <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Identity Pulse</span>
+                <div className="h-px flex-1 bg-slate-100"></div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                <button 
+                  onClick={() => handleQuickLogin('9876543210')}
+                  className="flex flex-col items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-brand-50 hover:border-brand-200 transition-all group"
+                >
+                  <Shield size={20} className="text-brand-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-[8px] font-black text-slate-400 uppercase">Admin</span>
+                </button>
+                <button 
+                  onClick={() => handleQuickLogin('9876543217')}
+                  className="flex flex-col items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-green-50 hover:border-green-200 transition-all group"
+                >
+                  <Coins size={20} className="text-green-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-[8px] font-black text-slate-400 uppercase">Finance</span>
+                </button>
+                <button 
+                  onClick={() => handleQuickLogin('9876543212')}
+                  className="flex flex-col items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-blue-50 hover:border-blue-200 transition-all group"
+                >
+                  <UsersIcon size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-[8px] font-black text-slate-400 uppercase">BDA</span>
+                </button>
               </div>
             </div>
-            {error && <div className="text-red-500 text-[11px] font-black text-center animate-bounce">{error}</div>}
-            <button type="submit" disabled={isLoading} className="w-full bg-slate-900 text-white font-black py-5 rounded-[24px] hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-slate-200 disabled:opacity-50">
-              {isLoading ? <Loader2 className="animate-spin" size={20} /> : <>Generate OTP <ArrowRight size={18} /></>}
-            </button>
-          </form>
+          </div>
         )}
 
         {step === 'OTP' && (
