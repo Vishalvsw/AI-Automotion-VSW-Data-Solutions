@@ -8,9 +8,9 @@ import {
   Target, ArrowRight, Wallet, Clock, 
   TrendingUp, CheckCircle, 
   ArrowUpRight, ListTodo,
-  ShieldCheck, Layers, ChevronRight, Sparkles, Trophy, AlertOctagon, UserCheck, PhoneCall, Mail, UserPlus
+  ShieldCheck, Layers, ChevronRight, Sparkles, Trophy, AlertOctagon, UserPlus, PhoneCall, Users
 } from 'lucide-react';
-import { UserRole, LeadStatus, User, ProjectStatus, TaskStatus, Lead } from '../types';
+import { UserRole, LeadStatus, User, ProjectStatus, TaskStatus } from '../types';
 import { useApp } from '../context/AppContext';
 
 interface DashboardProps {
@@ -61,7 +61,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
           
           <div className="flex flex-wrap gap-4 relative z-10">
-            {/* New Pending HR Applications Alert */}
             <Link to="/settings" className="bg-brand-50 border border-brand-100 px-6 py-4 rounded-3xl min-w-[160px] flex flex-col justify-center group hover:bg-brand-100 transition-colors cursor-pointer">
               <div className="text-[10px] text-brand-600 font-black uppercase tracking-widest mb-1 flex items-center gap-2">
                  <UserPlus size={14} /> HR Action
@@ -226,21 +225,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   };
 
   const renderBDADashboard = () => {
-    // STRICT ISOLATION: BDA only sees leads assigned to them.
+    // Isolated leads for BDA
     const bdaLeads = leads.filter(l => 
       l.assignedTo?.toLowerCase().includes(user.name.split(' ')[0].toLowerCase()) || 
       l.assignedTo === user.name
     );
     
-    // Financials restricted to personal commission and earned portfolio
     const pipelineValue = bdaLeads.reduce((acc, curr) => acc + (curr.value || 0), 0);
     const myClientNames = new Set(bdaLeads.map(l => l.company));
     const myPaidInvoices = invoices.filter(i => i.status === 'Paid' && myClientNames.has(i.client));
     
     const realizedRevenue = myPaidInvoices.reduce((acc, curr) => acc + curr.amount, 0);
-    // BDA Commission = 8% of realized (paid) revenue
     const realizedComm = (realizedRevenue * (user.commissionRate || 8)) / 100;
-    // Potential Commission = 8% of total pipeline value (leads that are won or pending)
     const potentialComm = (pipelineValue * (user.commissionRate || 8)) / 100;
 
     const today = new Date();
@@ -297,12 +293,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
         )}
 
+        {/* METRIC GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col justify-between group">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-brand-50 text-brand-600 rounded-2xl"><Target size={24} /></div>
                 <div className="flex flex-col">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Sales Achievement Index</h3>
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Sales Target Progress</h3>
                   {user.salesTarget && <span className="text-[9px] font-black text-slate-900 mt-1">Goal: {formatRupee(user.salesTarget)}</span>}
                 </div>
               </div>
@@ -312,7 +309,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     <span className="text-[9px] font-black text-brand-600 uppercase tracking-widest">{formatRupee(realizedRevenue)} Paid</span>
                  </div>
                  <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-600 rounded-full transition-all duration-1000" style={{ width: `${targetProgress}%` }}></div>
+                    <div className="h-full bg-brand-600 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(37,99,235,0.3)]" style={{ width: `${targetProgress}%` }}></div>
                  </div>
               </div>
            </div>
@@ -322,21 +319,28 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div className="relative z-10">
                  <div className="flex items-center gap-3 mb-2">
                     <div className="p-3 bg-white/10 text-brand-400 rounded-2xl"><Zap size={24} /></div>
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Active Strategic Pipeline</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personal Pipeline Value</h3>
                  </div>
                  <div className="text-4xl font-black text-white mt-4">{formatRupee(pipelineValue)}</div>
-                 <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mt-2">Unrealized Revenue Value</p>
+                 <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mt-2">Potential Bonus: {formatRupee(potentialComm)}</p>
               </div>
            </div>
 
            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col justify-between">
               <div className="flex items-center gap-3 mb-6">
-                 <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><TrendingUp size={24} /></div>
-                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Closing Velocity</h3>
+                 <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><Users size={24} /></div>
+                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client Portfolio</h3>
               </div>
-              <div className="flex flex-col items-center">
-                 <div className="text-5xl font-black text-slate-900 mb-1">{conversionRate}%</div>
-                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Winning Ratio</div>
+              <div className="flex justify-around items-center">
+                 <div className="text-center">
+                    <div className="text-3xl font-black text-slate-900">{bdaLeads.length}</div>
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Leads</div>
+                 </div>
+                 <div className="h-10 w-px bg-slate-100"></div>
+                 <div className="text-center">
+                    <div className="text-3xl font-black text-amber-600">{conversionRate}%</div>
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Win Rate</div>
+                 </div>
               </div>
            </div>
         </div>
@@ -346,9 +350,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div className="flex justify-between items-center mb-8 px-2">
                  <h3 className="font-black text-slate-900 flex items-center gap-3 text-lg uppercase">
                     <ListTodo size={24} className="text-brand-600" />
-                    Actionable BDA Nodes
+                    BDA Task Queue
                  </h3>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{allPendingTasks.length} Pending High-Impact Actions</span>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{allPendingTasks.length} Pending Actions</span>
               </div>
               <div className="space-y-4 flex-1">
                  {allPendingTasks.map(task => {
@@ -358,14 +362,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                         <div className="flex items-center justify-between">
                            <div className="flex items-center gap-4">
                               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-600 shadow-sm border border-slate-100 group-hover:bg-brand-600 group-hover:text-white transition-all">
-                                 {task.title.toLowerCase().includes('call') ? <PhoneCall size={20} /> : <Zap size={20} />}
+                                 <Zap size={20} />
                               </div>
                               <div>
                                  <div className="font-black text-slate-900 group-hover:text-brand-700 transition-colors">{task.title}</div>
                                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{task.client}</div>
                               </div>
                            </div>
-                           <Link to={`/leads/${leadId}`} className="p-3 bg-white text-brand-600 hover:bg-brand-600 hover:text-white rounded-xl transition-all shadow-sm">
+                           <Link to={leadId ? `/leads/${leadId}` : '#'} className="p-3 bg-white text-brand-600 hover:bg-brand-600 hover:text-white rounded-xl transition-all shadow-sm">
                               <ArrowRight size={16} />
                            </Link>
                         </div>
@@ -393,12 +397,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div className="flex justify-between items-center mb-8 px-2">
                  <h3 className="font-black text-slate-900 flex items-center gap-3 text-lg uppercase">
                     <Sparkles size={24} className="text-brand-600" />
-                    In-Cycle Commission
+                    Growth Analytics
                  </h3>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Predicted Earnings</span>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inbound Velocity</span>
               </div>
               <div className="p-10 text-center bg-brand-50 rounded-[32px] border border-brand-100">
-                 <div className="text-[10px] font-black text-brand-400 uppercase tracking-[0.3em] mb-2">Total Cycle Bonus Potential</div>
+                 <div className="text-[10px] font-black text-brand-400 uppercase tracking-[0.3em] mb-2">Cycle Earnings Potential</div>
                  <div className="text-5xl font-black text-brand-700 mb-2">{formatRupee(potentialComm)}</div>
                  <p className="text-[11px] font-bold text-brand-600 uppercase tracking-widest">Base Rate: 8.00% across all project nodes</p>
                  <div className="mt-10 grid grid-cols-2 gap-6">
@@ -407,8 +411,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                        <div className="text-xl font-black text-red-600">{bdaLeads.filter(l => l.priority === 'Hot').length}</div>
                     </div>
                     <div className="bg-white p-5 rounded-[24px] shadow-sm border border-brand-100">
-                       <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Warm Flows</div>
-                       <div className="text-xl font-black text-brand-600">{bdaLeads.filter(l => l.priority === 'Warm').length}</div>
+                       <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Pipeline</div>
+                       <div className="text-xl font-black text-brand-600">{bdaLeads.length}</div>
                     </div>
                  </div>
               </div>
