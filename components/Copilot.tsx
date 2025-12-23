@@ -7,14 +7,23 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { GoogleGenAI, Modality, LiveServerMessage } from "@google/genai";
+// Import User type from types.ts
+import { User } from '../types';
 
 interface Message {
   role: 'user' | 'model';
   text: string;
 }
 
-export default function Copilot() {
-  const { leads, projects, user } = useApp();
+// Define props interface for Copilot
+interface CopilotProps {
+  user: User;
+}
+
+// Update component to accept user prop
+export default function Copilot({ user }: CopilotProps) {
+  // Removed user from useApp as it is not present in AppContextType
+  const { leads, projects } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
@@ -38,7 +47,7 @@ export default function Copilot() {
   }, [messages]);
 
   const generateContextPrompt = () => {
-    const totalValue = leads.reduce((acc, l) => acc + l.value, 0);
+    const totalValue = leads.reduce((acc, l) => acc + (l.value || 0), 0);
     return `
       You are the VSW Enterprise AI Strategist. 
       Total Leads: ${leads.length}

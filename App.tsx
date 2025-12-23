@@ -15,7 +15,7 @@ import Settings from './pages/Settings';
 import NotificationCenter from './components/NotificationCenter'; 
 import Copilot from './components/Copilot';
 import { User, UserRole } from './types';
-import { Menu, Bell, Search } from 'lucide-react';
+import { Menu, Bell, Search, ShieldAlert, Clock, LogOut, Zap } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext';
 
 const AppContent: React.FC = () => {
@@ -36,6 +36,46 @@ const AppContent: React.FC = () => {
 
   if (!user) {
     return <Login onLogin={handleLogin} />;
+  }
+
+  // HR APPROVAL GATE: If user is a candidate, block main app access
+  if (user.role === UserRole.BDA_CANDIDATE) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-sans">
+        <div className="max-w-lg w-full text-center space-y-8 animate-in fade-in zoom-in duration-700">
+           <div className="relative inline-block">
+              <div className="w-24 h-24 bg-brand-600 rounded-[32px] mx-auto flex items-center justify-center shadow-2xl animate-pulse">
+                <ShieldAlert size={48} />
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center border-4 border-slate-900">
+                <Clock size={16} />
+              </div>
+           </div>
+           <div>
+             <h1 className="text-4xl font-black tracking-tight mb-2 uppercase">Node Authorization Pending</h1>
+             <p className="text-slate-400 font-medium text-lg">Your BDA Identity Protocol is being reviewed by VSW Human Capital.</p>
+           </div>
+           
+           <div className="bg-slate-800/50 border border-slate-700 p-8 rounded-[40px] space-y-6">
+              <div className="flex items-center gap-4 text-left p-4 bg-slate-800 rounded-2xl">
+                 <img src={user.avatarUrl} className="w-12 h-12 rounded-xl" alt="Candidate" />
+                 <div>
+                    <div className="font-black text-white">{user.name}</div>
+                    <div className="text-[10px] font-black text-brand-400 uppercase tracking-widest">Candidate ID: {user.id.slice(-8)}</div>
+                 </div>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed font-medium">Once HR authorizes your node, you will gain immediate access to the BDA Cockpit, 8% commission tracking, and active pipeline mapping.</p>
+              <div className="flex items-center justify-center gap-2 text-[10px] font-black text-brand-500 uppercase tracking-[0.3em]">
+                 <Zap size={14} /> Synchronizing with HR Nodes...
+              </div>
+           </div>
+
+           <button onClick={handleLogout} className="flex items-center gap-3 px-8 py-4 bg-white/5 hover:bg-white/10 text-slate-400 font-black uppercase text-xs rounded-2xl transition-all mx-auto">
+             <LogOut size={18} /> Terminate Link
+           </button>
+        </div>
+      </div>
+    );
   }
 
   const isFounder = user.role === UserRole.FOUNDER;
@@ -122,7 +162,8 @@ const AppContent: React.FC = () => {
           </main>
         </div>
       </div>
-      <Copilot />
+      {/* Pass the authenticated user to the Copilot component */}
+      <Copilot user={user} />
     </Router>
   );
 };

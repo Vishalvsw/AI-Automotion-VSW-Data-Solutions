@@ -7,7 +7,14 @@ export enum UserRole {
   FINANCE = 'FINANCE',
   BDA = 'BDA',
   DEVELOPER = 'DEVELOPER',
-  DESIGNER = 'DESIGNER'
+  DESIGNER = 'DESIGNER',
+  BDA_CANDIDATE = 'BDA_CANDIDATE'
+}
+
+export enum CandidateStatus {
+  PENDING = 'Pending',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected'
 }
 
 export interface User {
@@ -17,7 +24,10 @@ export interface User {
   role: UserRole;
   avatarUrl?: string;
   commissionRate?: number;
+  salesTarget?: number;
   phoneNumber?: string;
+  candidateStatus?: CandidateStatus; // For tracking application state
+  appliedDate?: string;
 }
 
 export enum LeadStatus {
@@ -106,6 +116,7 @@ export interface Lead {
   selectedModuleIds?: string[];
   score?: number;
   tags?: string[];
+  tasks?: Task[];
 }
 
 export enum ProjectStatus {

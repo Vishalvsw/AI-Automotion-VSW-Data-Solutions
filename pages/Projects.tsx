@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ProjectStatus, Project, User, TechMilestones, ProjectFinancials, UserRole, TaskStatus, Task, QuoteStatus, TaskPriority } from '../types';
-import { X, CheckSquare, FileText, Send, Code, AlertTriangle, Clock, Edit3, DollarSign, Target, Table, LayoutGrid, Check, Minus, Zap, Globe, ShieldCheck, Database, Server, Monitor, IndianRupee, Lock, ListTodo, Plus, Sparkles, User as UserIcon, Calendar, Eye, ChevronDown, AlertCircle, Info } from 'lucide-react';
+import { ProjectStatus, Project, User, ProjectFinancials, UserRole, TaskStatus, Task, QuoteStatus, TaskPriority } from '../types';
+import { X, CheckSquare, FileText, Send, Code, Clock, LayoutGrid, Check, Minus, IndianRupee, ListTodo, Plus, ChevronDown, AlertCircle, Info, Table } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { MOCK_USERS } from '../services/mockData';
 
@@ -11,14 +11,28 @@ interface ProjectsProps {
 }
 
 const Projects: React.FC<ProjectsProps> = ({ user }) => {
-  const { projects, updateProject, addProject, leads } = useApp();
-  const canEditFinance = user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE;
-  const canManageNodes = user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE || user.role === UserRole.DEVELOPER || user.role === UserRole.DESIGNER;
+  const { projects, updateProject, leads } = useApp();
+  const isAdmin = user.role === UserRole.FOUNDER;
+  const isFinance = user.role === UserRole.FINANCE;
+  const isBDA = user.role === UserRole.BDA;
+  
+  // ROLE ISOLATION: BDAs only see projects for clients they managed in the CRM
+  const myProjects = useMemo(() => {
+    if (isAdmin || isFinance) return projects;
+    if (isBDA) {
+      const myClientNames = new Set(leads.filter(l => l.assignedTo === user.name).map(l => l.company));
+      return projects.filter(p => myClientNames.has(p.client));
+    }
+    // Developers/Designers see all for now or could be filtered by task assignment
+    return projects;
+  }, [projects, leads, user, isAdmin, isFinance, isBDA]);
+
+  const canEditFinance = isAdmin || isFinance;
+  const canManageNodes = isAdmin || isFinance || user.role === UserRole.DEVELOPER || user.role === UserRole.DESIGNER;
   
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [viewMode, setViewMode] = useState<'kanban' | 'ledger'>('ledger');
   
-  // New Task State
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDate, setNewTaskDate] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>('Medium');
@@ -32,7 +46,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     { id: ProjectStatus.DROPPED, title: 'Dropped', color: 'bg-slate-50 text-slate-500', icon: Minus },
   ];
 
-  // Auto-assignment Logic
   const smartAssignment = useMemo(() => {
     const title = newTaskTitle.toLowerCase();
     const rules = [
@@ -56,7 +69,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
       id: `task-${Date.now()}`,
       title: newTaskTitle,
       assignee: smartAssignment,
-      priority: newTaskPriority, // Uses user selected or default 'Medium'
+      priority: newTaskPriority,
       status: TaskStatus.TODO,
       dueDate: newTaskDate || undefined
     };
@@ -64,7 +77,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     updateProject(projectId, { tasks: updatedTasks });
     if (selectedProject?.id === projectId) setSelectedProject({ ...selectedProject, tasks: updatedTasks });
     
-    // Reset Form
     setNewTaskTitle('');
     setNewTaskDate('');
     setNewTaskPriority('Medium');
@@ -125,15 +137,15 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
     <div className="h-full flex flex-col space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Production Intelligence</h1>
-          <p className="text-sm text-slate-500 font-medium">Cycle 2026-27 | Global Operations Command</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Production Nodes</h1>
+          <p className="text-sm text-slate-500 font-medium">Monitoring operational velocity for active client entities.</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
            <div className="flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
               <button onClick={() => setViewMode('kanban')} className={`p-2 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid size={18} /></button>
               <button onClick={() => setViewMode('ledger')} className={`p-2 rounded-lg transition-all ${viewMode === 'ledger' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}><Table size={18} /></button>
            </div>
-           {(user.role === UserRole.FOUNDER || user.role === UserRole.FINANCE) && (
+           {(isAdmin || isFinance) && (
              <button className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl sm:rounded-2xl hover:bg-brand-700 transition-all shadow-xl shadow-brand-100">Deploy Node</button>
            )}
         </div>
@@ -149,10 +161,10 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                     <col.icon size={12} />
                     {col.title}
                   </h3>
-                  <span className="text-[9px] sm:text-[10px] font-black text-slate-300">{projects.filter(p => p.status === col.id).length} Nodes</span>
+                  <span className="text-[9px] sm:text-[10px] font-black text-slate-300">{myProjects.filter(p => p.status === col.id).length} Nodes</span>
                 </div>
                 <div className="flex-1 px-4 sm:px-5 pb-6 overflow-y-auto space-y-4 custom-scrollbar">
-                  {projects.filter(p => p.status === col.id).map((project) => (
+                  {myProjects.filter(p => p.status === col.id).map((project) => (
                     <div key={project.id} onClick={() => setSelectedProject(project)} className={`bg-white p-5 sm:p-7 rounded-[24px] sm:rounded-[32px] border cursor-pointer transition-all hover:-translate-y-1 border-slate-200 shadow-sm hover:shadow-xl group`}>
                         <div className="mb-3 sm:mb-4">
                             <span className="text-[8px] sm:text-[9px] font-black tracking-[0.3em] text-slate-400 uppercase">{project.client}</span>
@@ -172,6 +184,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                            </div>
                         </div>
                         <div className="flex items-center justify-between pt-4 sm:pt-5 border-t border-slate-50">
+                            {/* FINANCE PROTECTION: BDAs only see totals, not detailed balance for now to prevent agency-wide tracking */}
                             <div className="text-[10px] sm:text-[11px] font-black text-slate-900">{formatINR(project.financials.total)}</div>
                             <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase ${project.financials.balance < 0 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
                                {project.financials.balance === 0 ? 'Settled' : `Bal: ${formatINR(Math.abs(project.financials.balance))}`}
@@ -190,17 +203,17 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
             <table className="w-full text-sm text-left border-collapse min-w-[1000px]">
               <thead className="bg-slate-900 text-white text-[9px] font-black uppercase tracking-[0.3em] sticky top-0 z-20">
                 <tr>
-                  <th className="px-8 sm:px-10 py-5 sm:py-6 border-r border-slate-800">Project / Operational Node</th>
+                  <th className="px-8 sm:px-10 py-5 sm:py-6 border-r border-slate-800">Operational Node</th>
                   <th className="px-6 py-6 border-r border-slate-800 text-center">Grand Total</th>
                   <th className="px-6 py-6 border-r border-slate-800 text-center bg-brand-600">Ar Balance</th>
-                  <th className="px-6 py-6 border-r border-slate-800 text-center">Quotation Hub</th>
-                  <th className="px-6 py-6 border-r border-slate-800 text-center">Production FE</th>
-                  <th className="px-6 py-6 border-r border-slate-800 text-center">Production BE</th>
+                  <th className="px-6 py-6 border-r border-slate-800 text-center">Quotation</th>
+                  <th className="px-6 py-6 border-r border-slate-800 text-center">FE Status</th>
+                  <th className="px-6 py-6 border-r border-slate-800 text-center">BE Status</th>
                   <th className="px-8 py-6 text-center">Status Index</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {projects.map((p) => {
+                {myProjects.map((p) => {
                    const matchingLead = leads.find(l => l.company === p.client);
                    const currentQuoteStatus = p.quoteStatus || matchingLead?.quoteStatus || QuoteStatus.DRAFT;
                    return (
@@ -247,7 +260,6 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         </div>
       )}
 
-      {/* PROJECT DETAIL SLIDEOVER */}
       {selectedProject && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-end bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
            <div className="w-full max-w-xl h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
